@@ -146,50 +146,13 @@ public class InCallSendService extends Service {
 
     // ---- ווידוא שמסך השיחה בחזית (רוט) ----
 
-    /** החלון שבפוקוס כרגע, למשל "com.android.phone/com.android.phone.InCallScreen" (או ריק). */
-    private static String focusedWindow(RootShell sh) throws IOException {
-        String out = sh.run("dumpsys window windows | grep mCurrentFocus");
-        if (out == null) return "";
-        int i = out.indexOf("mCurrentFocus");
-        if (i < 0) return "";
-        String line = out.substring(i);
-        int nl = line.indexOf('\n');
-        if (nl >= 0) line = line.substring(0, nl);
-        int sp = line.lastIndexOf(' ');
-        String w = sp >= 0 ? line.substring(sp + 1) : line;
-        return w.replace("}", "").trim();
-    }
-
-    private static boolean isCallUi(String w) {
-        String l = w.toLowerCase();
-        if (l.contains("keypadsender")) return false;
-        return l.contains("phone") || l.contains("dialer") || l.contains("incall")
-                || l.contains("telecom") || l.contains("call");
-    }
-
     /** true = מסך השיחה בחזית (אחרי ניסיון להחזיר אותו). אחרת false ו-notFrontInfo מתעדכן. */
     private boolean ensureCallUi(Context ctx, RootShell sh) throws Exception {
-        String w = focusedWindow(sh);
-        if (isCallUi(w)) return true;
+        if (CallScreen.isCallUi(CallScreen.focusedWindow(sh))) return true;
         if (!inCall(ctx)) { aborted = true; return false; }
-        // 1) בלי רוט: TelecomManager מעלה את מסך השיחה
-        if (CallScreen.showViaTelecom(ctx)) {
-            if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
-            w = focusedWindow(sh);
-            if (isCallUi(w)) return true;
-        }
-        // 2) הפקודה שהוגדרה, ואז פקודות גיבוי
-        java.util.List<String> cmds = new java.util.ArrayList<String>();
-        String cmd = Prefs.getInCallCmd(ctx).trim();
-        if (cmd.length() > 0) cmds.add(cmd);
-        for (String f : CallScreen.FALLBACK_CMDS) if (!cmds.contains(f)) cmds.add(f);
-        for (String c : cmds) {
-            if (!inCall(ctx)) { aborted = true; return false; }
-            sh.run(c);
-            if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
-            w = focusedWindow(sh);
-            if (isCallUi(w)) return true;
-        }
+        if (CallScreen.bringToFront(ctx, sh)) return true;
+        if (!inCall(ctx)) { aborted = true; return false; }
+        String w = CallScreen.focusedWindow(sh);
         notFrontInfo = w.length() == 0 ? "?" : w;
         return false;
     }
@@ -228,17 +191,19 @@ public class InCallSendService extends Service {
     private boolean sendRoot(Context ctx, String[] parts, long[] delays, boolean wait) throws Exception {
         RootShell sh = RootShell.open();
         if (sh == null) return false;
+        InjectorClient inj = null;
         try {
             if (!inCall(ctx)) { aborted = true; return false; }
             if (!ensureCallUi(ctx, sh)) return false;
             if (wait && !waitAnswered(ctx, sh)) return false;
             int gap = Math.max(0, Prefs.getGapMs(ctx));
             int batch = Math.max(1, Prefs.getBatch(ctx));
-            // Android 7+: input keyevent מקבל כמה קודים בפקודה אחת; לפני כן משרשרים ב-';'
+            // תהליך root קבוע שמזריק מקשים מהר ובלי לחיצה "ארוכה"; אם לא עלה - input keyevent
+            inj = InjectorClient.open(ctx);
+            // בלי תהליך קבוע: Android 7+ מקבל כמה קודים בפקודה אחת; לפני כן משרשרים ב-';'
             boolean multiArg = android.os.Build.VERSION.SDK_INT >= 24;
             for (int k = 0; k < parts.length; k++) {
                 if (delays[k] > 0 && !sleepInCall(ctx, delays[k])) { aborted = true; return false; }
-                StringBuilder codes = new StringBuilder();
                 java.util.List<Integer> list = new java.util.ArrayList<Integer>();
                 for (int i = 0; i < parts[k].length(); i++) {
                     int code = keyCode(parts[k].charAt(i));
@@ -246,29 +211,40 @@ public class InCallSendService extends Service {
                 }
                 // בדיקת מסך שיחה בחזית: בתחילת כל חלק ולפני קבוצה שיש בה # או *
                 boolean first = true;
-                for (int i = 0; i < list.size(); i += batch) {
-                    int end = Math.min(list.size(), i + batch);
+                int size = inj != null ? 12 : batch;
+                for (int i = 0; i < list.size(); ) {
+                    int end = i;
                     boolean special = false;
-                    codes.setLength(0);
-                    for (int j = i; j < end; j++) {
-                        int code = list.get(j);
-                        if (code == KeyEvent.KEYCODE_POUND || code == KeyEvent.KEYCODE_STAR) special = true;
-                        if (multiArg) {
-                            codes.append(codes.length() == 0 ? "input keyevent " : " ").append(code);
-                        } else {
-                            if (codes.length() > 0) codes.append("; ");
-                            codes.append("input keyevent ").append(code);
-                        }
+                    // קבוצה: עד size מקשים; # ו-* תמיד בקבוצה נפרדת משלהם
+                    while (end < list.size() && end - i < size) {
+                        int code = list.get(end);
+                        boolean sp = code == KeyEvent.KEYCODE_POUND || code == KeyEvent.KEYCODE_STAR;
+                        if (sp && end > i) break;
+                        end++;
+                        if (sp) { special = true; break; }
                     }
+                    int[] codes = new int[end - i];
+                    for (int j = i; j < end; j++) codes[j - i] = list.get(j);
+                    i = end;
                     if (!inCall(ctx)) { aborted = true; return false; }
                     if ((first || special) && !ensureCallUi(ctx, sh)) return false;
                     first = false;
-                    if (sh.run(codes.toString()) == null) return false;
-                    if (gap > 0 && !sleepInCall(ctx, gap)) { aborted = true; return false; }
+                    if (inj != null) {
+                        if (!inj.send(gap, codes)) return false;
+                    } else {
+                        StringBuilder cmd = new StringBuilder();
+                        for (int code : codes) {
+                            if (multiArg) cmd.append(cmd.length() == 0 ? "input keyevent " : " ").append(code);
+                            else cmd.append(cmd.length() == 0 ? "" : "; ").append("input keyevent ").append(code);
+                        }
+                        if (sh.run(cmd.toString()) == null) return false;
+                    }
+                    if (gap > 0 && i < list.size() && !sleepInCall(ctx, gap)) { aborted = true; return false; }
                 }
             }
             return true;
         } finally {
+            if (inj != null) inj.close();
             sh.close();
         }
     }

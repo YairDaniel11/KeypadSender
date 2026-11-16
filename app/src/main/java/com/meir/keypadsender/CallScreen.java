@@ -4,11 +4,19 @@ import android.content.Context;
 import android.os.Build;
 import android.telecom.TelecomManager;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /** מעביר את מסך השיחה הפעילה לחזית. */
 final class CallScreen {
     private CallScreen() {}
 
-    /** דרך TelecomManager (API 23+, בלי רוט). true = הבקשה נשלחה. */
+    private static final long SWITCH_WAIT_MS = 1200;
+
+    /** דרך TelecomManager (API 23+, בלי רוט). true = הבקשה נשלחה (לא מבטיח שהמסך עלה). */
     static boolean showViaTelecom(Context ctx) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
         try {
@@ -28,4 +36,70 @@ final class CallScreen {
             "am start -n com.google.android.dialer/com.android.incallui.InCallActivity",
             "am start -n com.android.dialer/com.android.incallui.InCallActivity"
     };
+
+    /** החלון שבפוקוס כרגע, למשל "com.android.phone/com.android.phone.InCallScreen" (או ריק). */
+    static String focusedWindow(RootShell sh) throws IOException {
+        String out = sh.run("dumpsys window windows | grep mCurrentFocus");
+        if (out == null) return "";
+        int i = out.indexOf("mCurrentFocus");
+        if (i < 0) return "";
+        String line = out.substring(i);
+        int nl = line.indexOf('\n');
+        if (nl >= 0) line = line.substring(0, nl);
+        int sp = line.lastIndexOf(' ');
+        String w = sp >= 0 ? line.substring(sp + 1) : line;
+        return w.replace("}", "").trim();
+    }
+
+    static boolean isCallUi(String w) {
+        String l = w.toLowerCase();
+        if (l.contains("keypadsender")) return false;
+        return l.contains("phone") || l.contains("dialer") || l.contains("incall")
+                || l.contains("telecom") || l.contains("call");
+    }
+
+    private static final Pattern COMPONENT = Pattern.compile("([A-Za-z0-9_.]+/[A-Za-z0-9_.$]+)");
+
+    /** מחפש במערכת אקטיביטי של מסך שיחה שכבר קיים (הכי אמין: זה מה שהמכשיר באמת משתמש בו). */
+    private static List<String> discoverCommands(RootShell sh) throws IOException {
+        List<String> cmds = new ArrayList<String>();
+        String out = sh.run("dumpsys activity activities | grep -i -E 'incall|InCallScreen|calling'");
+        if (out == null) return cmds;
+        for (String line : out.split("\n")) {
+            Matcher m = COMPONENT.matcher(line);
+            while (m.find()) {
+                String comp = m.group(1);
+                String l = comp.toLowerCase();
+                if (l.contains("keypadsender")) continue;
+                if (!(l.contains("incall") || l.contains("call"))) continue;
+                String c = "am start -n " + comp;
+                if (!cmds.contains(c)) cmds.add(c);
+            }
+        }
+        return cmds;
+    }
+
+    /**
+     * מנסה להעלות את מסך השיחה לחזית ומוודא (לפי חלון הפוקוס). חוסם (להריץ בת'רד רקע).
+     * true = מסך השיחה בחזית.
+     */
+    static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
+        String w = focusedWindow(sh);
+        if (isCallUi(w)) return true;
+        if (showViaTelecom(ctx)) {
+            Thread.sleep(SWITCH_WAIT_MS);
+            if (isCallUi(focusedWindow(sh))) return true;
+        }
+        List<String> cmds = new ArrayList<String>();
+        String user = Prefs.getInCallCmd(ctx).trim();
+        if (user.length() > 0) cmds.add(user);
+        for (String c : discoverCommands(sh)) if (!cmds.contains(c)) cmds.add(c);
+        for (String c : FALLBACK_CMDS) if (!cmds.contains(c)) cmds.add(c);
+        for (String c : cmds) {
+            sh.run(c);
+            Thread.sleep(SWITCH_WAIT_MS);
+            if (isCallUi(focusedWindow(sh))) return true;
+        }
+        return false;
+    }
 }

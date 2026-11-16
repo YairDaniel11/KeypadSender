@@ -106,23 +106,21 @@ public class MainActivity extends Activity {
 
     private View gotoCall;
 
-    /** מעלה את מסך השיחה הפעילה לחזית (TelecomManager, ואם אין - פקודות רוט). */
+    /** מעלה את מסך השיחה הפעילה לחזית (TelecomManager, ואם אין/לא עבד - רוט עם וידוא). */
     private void gotoActiveCall() {
         if (CallTracker.status(this) == CallTracker.Status.IDLE) {
             Toast.makeText(this, R.string.toast_no_active_call, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (CallScreen.showViaTelecom(this)) return;
-        if (!Prefs.useRoot(this)) return;
         final Context app = getApplicationContext();
+        final boolean root = Prefs.useRoot(this);
         new Thread(new Runnable() {
             @Override public void run() {
+                if (!root) { CallScreen.showViaTelecom(app); return; }
                 RootShell sh = RootShell.open();
-                if (sh == null) return;
+                if (sh == null) { CallScreen.showViaTelecom(app); return; }
                 try {
-                    String cmd = Prefs.getInCallCmd(app).trim();
-                    if (cmd.length() > 0) sh.run(cmd);
-                    else sh.run(CallScreen.FALLBACK_CMDS[0]);
+                    CallScreen.bringToFront(app, sh);
                 } catch (Exception ignored) {
                 } finally {
                     sh.close();
@@ -223,9 +221,6 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStatus() {
-        boolean inCall = PermissionUtil.hasAll(this, PermissionUtil.ALL)
-                && CallTracker.status(this) != CallTracker.Status.IDLE;
-        gotoCall.setVisibility(inCall ? View.VISIBLE : View.GONE);
         if (!PermissionUtil.hasAll(this, PermissionUtil.ALL)) {
             status.setText(R.string.status_need_permission);
             return;
