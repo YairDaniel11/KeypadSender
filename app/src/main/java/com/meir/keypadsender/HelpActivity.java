@@ -57,7 +57,7 @@ public class HelpActivity extends Activity {
 
             String body = i < BODIES.length ? getString(BODIES[i])
                     : getString(R.string.help_keymap_intro)
-                            + KeypadEncoder.describeTable(Prefs.getLetterMap(this))
+                            + KeypadEncoder.describeTable(null)
                             + getString(R.string.help_keymap_extra);
             box.addView(text(body, 17, primary, true), lp(6));
 
