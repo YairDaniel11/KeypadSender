@@ -3,9 +3,18 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -38,3 +47,13 @@ jobs:
         with:
           name: KeypadSender-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Publish Release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          APK="${REPO_NAME}-v${{ github.run_number }}.apk"
+          cp app/build/outputs/apk/debug/*.apk "$APK"
+          gh release create "v${{ github.run_number }}" "$APK"             --title "${REPO_NAME} v${{ github.run_number }}"             --notes "${REPO_NAME} build ${{ github.run_number }} (commit ${GITHUB_SHA::7})"             --target "$GITHUB_SHA"
