@@ -70,6 +70,12 @@ public class KeypadEncoderTest {
         assertArrayEquals(new String[]{"1277#"}, sc.parts);
     }
 
+    @Test public void suffixCommasWait() {
+        SeqUtil.Script sc = SeqUtil.toScript("", "775,,#");
+        assertArrayEquals(new String[]{"775", "#"}, sc.parts);
+        assertArrayEquals(new long[]{0, 4000}, sc.delays);
+    }
+
     @Test public void customMapAndBody() {
         assertEquals("22", KeypadEncoder.encodeBody("b", "b=2:2"));
         assertEquals("", KeypadEncoder.findUnsupported("b", "b=2:2"));

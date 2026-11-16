@@ -340,7 +340,8 @@ public class MainActivity extends Activity {
                     break;
                 }
                 // כבר בשיחה עם הקו: לא מחייגים ולא שולחים רצף - רק הטקסט
-                InCallSendService.start(this, body);
+                SeqUtil.Script sc = SeqUtil.toScript("", body); // הסיומת יכולה לכלול פסיקים (המתנה)
+                InCallSendService.startParts(this, sc.parts, sc.delays);
                 break;
             case IN_CALL_OTHER:
                 Toast.makeText(this, R.string.toast_other_call, Toast.LENGTH_LONG).show();

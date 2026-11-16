@@ -54,7 +54,7 @@ public final class SeqUtil {
         StringBuilder cur = new StringBuilder();
         long curDelay = 0;
         long wait = 0;
-        String s = sanitize(seq);
+        String s = sanitize(seq) + sanitize(body); // גם בגוף (הסיומת) פסיק = המתנה
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c == ',') {
@@ -69,15 +69,8 @@ public final class SeqUtil {
                 cur.append(c);
             }
         }
-        if (cur.length() > 0 && wait == 0) { // בלי המתנה לפני הגוף: מאחדים לחלק אחד
-            cur.append(body);
-            parts.add(cur.toString());
-            delays.add(curDelay);
-        } else {
-            if (cur.length() > 0) { parts.add(cur.toString()); delays.add(curDelay); }
-            parts.add(body);
-            delays.add(wait);
-        }
+        if (cur.length() > 0) { parts.add(cur.toString()); delays.add(curDelay); }
+        if (parts.isEmpty()) { parts.add(""); delays.add(wait); }
         return new Script(parts, delays);
     }
 }

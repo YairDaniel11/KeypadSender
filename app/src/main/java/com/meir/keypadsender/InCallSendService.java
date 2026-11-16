@@ -55,6 +55,14 @@ public class InCallSendService extends Service {
         ctx.startService(i);
     }
 
+    /** כבר בשיחה עם הקו: שולח חלקים עם השהיות (ללא המתנה לחיבור/מענה). */
+    public static void startParts(Context ctx, String[] parts, long[] delaysMs) {
+        Intent i = new Intent(ctx, InCallSendService.class);
+        i.putExtra(EXTRA_PARTS, parts);
+        i.putExtra(EXTRA_DELAYS, delaysMs);
+        ctx.startService(i);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
         String d = intent == null ? null : intent.getStringExtra(EXTRA_DIGITS);
