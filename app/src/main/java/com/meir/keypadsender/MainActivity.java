@@ -324,7 +324,7 @@ public class MainActivity extends Activity {
                 // עם רוט: מחייגים את המספר בלבד (מחרוזת עם פסיקים נדחית בחלק מהמכשירים
                 // כ"מספר לא תקין") ואחר כך שולחים את הרצף וההקשות כשהשיחה מתחברת.
                 String dial = root
-                        ? number.replaceAll("[\s-]", "")
+                        ? number.replaceAll("[\\s-]", "")
                         : Dialer.buildDialString(number, seq, body);
                 if (!Dialer.dial(this, dial)) {
                     Toast.makeText(this, R.string.toast_airplane, Toast.LENGTH_LONG).show();
