@@ -13,6 +13,12 @@
     <string name="btn_send">שלח</string>
     <string name="btn_settings">הגדרות</string>
     <string name="btn_clear">נקה</string>
+    <string name="btn_history">היסטוריה</string>
+    <string name="title_history">היסטוריית הקלדה</string>
+    <string name="history_empty">אין עדיין היסטוריה</string>
+    <string name="btn_clear_history">נקה את כל ההיסטוריה</string>
+    <string name="toast_deleted">נמחק</string>
+    <string name="toast_not_front">מסך השיחה לא בחזית – לא נשלח (בחזית: %1$s)</string>
 
     <string name="status_need_permission">חסרות הרשאות – ייבקשו בשליחה</string>
     <string name="status_no_number">לא הוגדר מספר קו – יש להיכנס להגדרות</string>

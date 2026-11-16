@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
         extGroup = (RadioGroup) findViewById(R.id.ext_group);
         Button send = (Button) findViewById(R.id.btn_send);
         View settings = findViewById(R.id.btn_settings);
+        View history = findViewById(R.id.btn_history);
         Button clear = (Button) findViewById(R.id.btn_clear);
 
         int ext = Prefs.getExt(this);
@@ -59,18 +60,33 @@ public class MainActivity extends Activity {
             }
         });
 
+        // שחזור הטקסט האחרון (גם אחרי שהמערכת סגרה את האפליקציה ברקע)
+        String draft = Prefs.getDraft(this);
+        if (draft.length() > 0) {
+            input.setText(draft);
+            input.setSelection(draft.length());
+        }
+
         input.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
-            @Override public void afterTextChanged(Editable s) { updatePreview(s.toString()); }
+            @Override public void afterTextChanged(Editable s) {
+                updatePreview(s.toString());
+                Prefs.setDraft(MainActivity.this, s.toString());
+            }
         });
-        updatePreview("");
+        updatePreview(input.getText().toString());
 
         send.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { trySend(); }
         });
         settings.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { openSettings(); }
+        });
+        history.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivityForResult(new Intent(MainActivity.this, HistoryActivity.class), REQ_HISTORY);
+            }
         });
         clear.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
@@ -81,6 +97,21 @@ public class MainActivity extends Activity {
 
         // פוקוס התחלתי: שדה הטקסט (הפעולה הנפוצה); השלוחה זמינה בחץ למעלה
         input.requestFocus();
+    }
+
+    private static final int REQ_HISTORY = 77;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_HISTORY && resultCode == RESULT_OK && data != null) {
+            String t = data.getStringExtra(HistoryActivity.EXTRA_TEXT);
+            if (t != null) {
+                input.setText(t);
+                input.setSelection(t.length());
+                input.requestFocus();
+            }
+        }
     }
 
     private void openSettings() {
@@ -174,6 +205,7 @@ public class MainActivity extends Activity {
             Toast.makeText(this, R.string.toast_empty, Toast.LENGTH_SHORT).show();
             return;
         }
+        Prefs.addHistory(this, input.getText().toString());
         // מבקשים את כל ההרשאות מראש; אם נדחו - לא שולחים כלל (אין נתיב גיבוי ידני)
         if (!PermissionUtil.hasAll(this, PermissionUtil.ALL)) {
             pendingSend = true;

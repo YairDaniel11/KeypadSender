@@ -12,11 +12,14 @@ import android.os.PowerManager;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
+import java.io.IOException;
+
 /**
- * שולח רצף הקשות בתוך שיחה קיימת (בלי לחייג).
+ * שולח רצף הקשות בתוך שיחה (בלי לחייג).
  * אפליקציה שאינה החייגן ברירת המחדל לא יכולה לשלוח DTMF לשיחה פעילה דרך API ציבורי, ולכן:
- *  - עם רוט: מחזירים את מסך השיחה לחזית ומזריקים KEYCODE ספרות (`input keyevent`),
- *    שמסך השיחה מתרגם ל-DTMF.
+ *  - עם רוט: מוודאים שמסך השיחה בחזית (ואם לא - מחזירים אותו), ומזריקים KEYCODE ספרות
+ *    (`input keyevent`) שמסך השיחה מתרגם ל-DTMF. אם מסך השיחה לא בחזית - לא מזריקים כלל,
+ *    כדי שהמקשים (כולל #) לא ייכנסו לאפליקציה אחרת או לשולחן העבודה.
  *  - בלי רוט: צלילי DTMF דרך הרמקול (ניסיוני - תלוי במכשיר ובביטול הד).
  */
 public class InCallSendService extends Service {
@@ -25,12 +28,15 @@ public class InCallSendService extends Service {
     private static final String EXTRA_PARTS = "parts";
     private static final String EXTRA_DELAYS = "delays";
     private static final String EXTRA_WAIT = "wait";
-    private static final int WAIT_CALL_MS = 40000; // המתנה מקסימלית להתחלת השיחה
+    private static final int WAIT_CALL_MS = 40000;   // המתנה מקסימלית להתחלת השיחה
+    private static final int WAIT_ANSWER_MS = 45000; // המתנה מקסימלית למענה
     private static final int SWITCH_DELAY_MS = 1200; // המתנה אחרי חזרה למסך השיחה
     private static final int TONE_MS = 120;
+    private static final int FOCUS_CHECK_EVERY = 3;  // בדיקת מסך שיחה בחזית: כל N הקשות (ותמיד לפני #)
 
     private final Handler main = new Handler(Looper.getMainLooper());
-    private volatile boolean aborted; // השיחה הסתיימה באמצע השליחה
+    private volatile boolean aborted;      // השיחה הסתיימה באמצע השליחה
+    private volatile String notFrontInfo;  // לא נמצא מסך שיחה בחזית (מה כן היה בחזית)
 
     public static void start(Context ctx, String digits) {
         Intent i = new Intent(ctx, InCallSendService.class);
@@ -39,7 +45,7 @@ public class InCallSendService extends Service {
     }
 
     /**
-     * אחרי חיוג של המספר בלבד: ממתין שהשיחה תתחבר, ואז שולח כל חלק (שלוחה, 2, ההקשות)
+     * אחרי חיוג של המספר בלבד: ממתין שהשיחה תתחבר ושתיענה, ואז שולח כל חלק (שלוחה, 2, ההקשות)
      * אחרי ההשהיה שלו במילישניות. דורש רוט.
      */
     public static void startScripted(Context ctx, String[] parts, long[] delaysMs) {
@@ -75,11 +81,11 @@ public class InCallSendService extends Service {
                 boolean ok = false;
                 try {
                     if (wait && !waitForCall(app)) {
-                        toast(R.string.toast_send_failed);
+                        toast(app.getString(R.string.toast_send_failed));
                         return;
                     }
                     if (Prefs.useRoot(app)) {
-                        ok = sendRoot(app, parts, delays);
+                        ok = sendRoot(app, parts, delays, wait);
                     } else {
                         StringBuilder all = new StringBuilder();
                         for (String part : parts) all.append(part);
@@ -90,17 +96,19 @@ public class InCallSendService extends Service {
                     if (wl != null && wl.isHeld()) wl.release();
                     stopSelf(startId);
                 }
-                toast(ok ? R.string.toast_sent
-                        : aborted ? R.string.toast_aborted : R.string.toast_send_failed);
+                if (ok) toast(app.getString(R.string.toast_sent));
+                else if (notFrontInfo != null) {
+                    toast(app.getString(R.string.toast_not_front, notFrontInfo));
+                } else toast(app.getString(aborted ? R.string.toast_aborted : R.string.toast_send_failed));
             }
         }, "incall-send").start();
         return START_NOT_STICKY;
     }
 
-    private void toast(final int resId) {
+    private void toast(final String text) {
         main.post(new Runnable() {
             @Override public void run() {
-                Toast.makeText(getApplicationContext(), resId, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -131,32 +139,103 @@ public class InCallSendService extends Service {
     private static boolean waitForCall(Context ctx) throws InterruptedException {
         long end = System.currentTimeMillis() + WAIT_CALL_MS;
         while (System.currentTimeMillis() < end) {
-            if (CallTracker.status(ctx) == CallTracker.Status.IN_CALL_TARGET) return true;
+            if (inCall(ctx)) return true;
             Thread.sleep(500);
         }
         return false;
     }
 
-    private boolean sendRoot(Context ctx, String[] parts, long[] delays) throws Exception {
+    // ---- ווידוא שמסך השיחה בחזית (רוט) ----
+
+    /** החלון שבפוקוס כרגע, למשל "com.android.phone/com.android.phone.InCallScreen" (או ריק). */
+    private static String focusedWindow(RootShell sh) throws IOException {
+        String out = sh.run("dumpsys window windows | grep mCurrentFocus");
+        if (out == null) return "";
+        int i = out.indexOf("mCurrentFocus");
+        if (i < 0) return "";
+        String line = out.substring(i);
+        int nl = line.indexOf('\n');
+        if (nl >= 0) line = line.substring(0, nl);
+        int sp = line.lastIndexOf(' ');
+        String w = sp >= 0 ? line.substring(sp + 1) : line;
+        return w.replace("}", "").trim();
+    }
+
+    private static boolean isCallUi(String w) {
+        String l = w.toLowerCase();
+        if (l.contains("keypadsender")) return false;
+        return l.contains("phone") || l.contains("dialer") || l.contains("incall")
+                || l.contains("telecom") || l.contains("call");
+    }
+
+    /** true = מסך השיחה בחזית (אחרי ניסיון להחזיר אותו). אחרת false ו-notFrontInfo מתעדכן. */
+    private boolean ensureCallUi(Context ctx, RootShell sh) throws Exception {
+        String w = focusedWindow(sh);
+        if (isCallUi(w)) return true;
+        String cmd = Prefs.getInCallCmd(ctx).trim();
+        if (cmd.length() > 0 && inCall(ctx)) {
+            sh.run(cmd);
+            if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
+            w = focusedWindow(sh);
+            if (isCallUi(w)) return true;
+        }
+        notFrontInfo = w.length() == 0 ? "?" : w;
+        return false;
+    }
+
+    // ---- המתנה למענה (רוט, best-effort) ----
+
+    /** 0 = לא ידוע, 1 = מחייג/מצלצל, 2 = השיחה פעילה (נענתה). */
+    private static int callPhase(RootShell sh) throws IOException {
+        String out = sh.run("dumpsys phone | grep -i foregroundcall");
+        if (out == null) return 0;
+        String u = out.toUpperCase();
+        if (u.contains("ACTIVE")) return 2;
+        if (u.contains("DIALING") || u.contains("ALERTING")) return 1;
+        return 0;
+    }
+
+    /**
+     * ממתין שהשיחה תיענה. אם המכשיר לא מדווח מצב כזה (לא ידוע) - ממשיך מיד, וההמתנה נשארת
+     * ההשהיה שהוגדרה (p1). false = השיחה הסתיימה / לא נענתה בזמן.
+     */
+    private boolean waitAnswered(Context ctx, RootShell sh) throws Exception {
+        long end = System.currentTimeMillis() + WAIT_ANSWER_MS;
+        int unknown = 0;
+        boolean seenPending = false;
+        while (System.currentTimeMillis() < end) {
+            if (!inCall(ctx)) { aborted = true; return false; }
+            int ph = callPhase(sh);
+            if (ph == 2) return true;
+            if (ph == 1) seenPending = true;
+            else if (!seenPending && ++unknown >= 3) return true; // אין דיווח מצב במכשיר הזה
+            if (!sleepInCall(ctx, 600)) { aborted = true; return false; }
+        }
+        return false;
+    }
+
+    private boolean sendRoot(Context ctx, String[] parts, long[] delays, boolean wait) throws Exception {
         RootShell sh = RootShell.open();
         if (sh == null) return false;
         try {
             if (!inCall(ctx)) { aborted = true; return false; }
-            String cmd = Prefs.getInCallCmd(ctx).trim();
-            if (cmd.length() > 0) {
-                sh.run(cmd);
-                if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
-            }
+            if (!ensureCallUi(ctx, sh)) return false;
+            if (wait && !waitAnswered(ctx, sh)) return false;
             int gap = Math.max(0, Prefs.getGapMs(ctx));
+            int sent = 0;
             for (int k = 0; k < parts.length; k++) {
                 if (delays[k] > 0 && !sleepInCall(ctx, delays[k])) { aborted = true; return false; }
                 String digits = parts[k];
                 for (int i = 0; i < digits.length(); i++) {
-                    int code = keyCode(digits.charAt(i));
+                    char c = digits.charAt(i);
+                    int code = keyCode(c);
                     if (code < 0) continue;
-                    // בדיקה צמודה לפני כל הקשה: אחרי ניתוק לא מזריקים דבר
                     if (!inCall(ctx)) { aborted = true; return false; }
+                    // # ו-* (ובכל חלק חדש) רק כשמסך השיחה בחזית; אחרת היו נלחצים בחוץ
+                    boolean check = i == 0 || c == '#' || c == '*' || sent % FOCUS_CHECK_EVERY == 0;
+                    if (check && !ensureCallUi(ctx, sh)) return false;
                     if (sh.run("input keyevent " + code) == null) return false;
+                    sent++;
                     if (!sleepInCall(ctx, gap)) { aborted = true; return false; }
                 }
             }
