@@ -42,6 +42,9 @@ public final class Prefs {
     public static int getExt(Context c) { return raw(c).getInt(K_EXT, 1); }
     public static boolean useRoot(Context c) { return raw(c).getBoolean(K_ROOT, false); }
     public static int getGapMs(Context c) { return raw(c).getInt(K_GAP, DEFAULT_GAP_MS); }
+    public static final int DEFAULT_BATCH = 5;
+    public static int getBatch(Context c) { return raw(c).getInt("batch", DEFAULT_BATCH); }
+    public static void setBatch(Context c, int n) { raw(c).edit().putInt("batch", Math.max(1, n)).apply(); }
     public static String getInCallCmd(Context c) { return raw(c).getString(K_CMD, DEFAULT_INCALL_CMD); }
 
     /** הטקסט שבחלונית: נשמר בכל שינוי, כדי ששום יציאה/הריגת תהליך לא תמחק אותו. */

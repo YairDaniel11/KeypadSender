@@ -32,7 +32,6 @@ public class InCallSendService extends Service {
     private static final int WAIT_ANSWER_MS = 45000; // המתנה מקסימלית למענה
     private static final int SWITCH_DELAY_MS = 1200; // המתנה אחרי חזרה למסך השיחה
     private static final int TONE_MS = 120;
-    private static final int FOCUS_CHECK_EVERY = 3;  // בדיקת מסך שיחה בחזית: כל N הקשות (ותמיד לפני #)
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private volatile boolean aborted;      // השיחה הסתיימה באמצע השליחה
@@ -172,9 +171,21 @@ public class InCallSendService extends Service {
     private boolean ensureCallUi(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
         if (isCallUi(w)) return true;
+        if (!inCall(ctx)) { aborted = true; return false; }
+        // 1) בלי רוט: TelecomManager מעלה את מסך השיחה
+        if (CallScreen.showViaTelecom(ctx)) {
+            if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
+            w = focusedWindow(sh);
+            if (isCallUi(w)) return true;
+        }
+        // 2) הפקודה שהוגדרה, ואז פקודות גיבוי
+        java.util.List<String> cmds = new java.util.ArrayList<String>();
         String cmd = Prefs.getInCallCmd(ctx).trim();
-        if (cmd.length() > 0 && inCall(ctx)) {
-            sh.run(cmd);
+        if (cmd.length() > 0) cmds.add(cmd);
+        for (String f : CallScreen.FALLBACK_CMDS) if (!cmds.contains(f)) cmds.add(f);
+        for (String c : cmds) {
+            if (!inCall(ctx)) { aborted = true; return false; }
+            sh.run(c);
             if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
             w = focusedWindow(sh);
             if (isCallUi(w)) return true;
@@ -222,21 +233,38 @@ public class InCallSendService extends Service {
             if (!ensureCallUi(ctx, sh)) return false;
             if (wait && !waitAnswered(ctx, sh)) return false;
             int gap = Math.max(0, Prefs.getGapMs(ctx));
-            int sent = 0;
+            int batch = Math.max(1, Prefs.getBatch(ctx));
+            // Android 7+: input keyevent מקבל כמה קודים בפקודה אחת; לפני כן משרשרים ב-';'
+            boolean multiArg = android.os.Build.VERSION.SDK_INT >= 24;
             for (int k = 0; k < parts.length; k++) {
                 if (delays[k] > 0 && !sleepInCall(ctx, delays[k])) { aborted = true; return false; }
-                String digits = parts[k];
-                for (int i = 0; i < digits.length(); i++) {
-                    char c = digits.charAt(i);
-                    int code = keyCode(c);
-                    if (code < 0) continue;
+                StringBuilder codes = new StringBuilder();
+                java.util.List<Integer> list = new java.util.ArrayList<Integer>();
+                for (int i = 0; i < parts[k].length(); i++) {
+                    int code = keyCode(parts[k].charAt(i));
+                    if (code >= 0) list.add(code);
+                }
+                // בדיקת מסך שיחה בחזית: בתחילת כל חלק ולפני קבוצה שיש בה # או *
+                boolean first = true;
+                for (int i = 0; i < list.size(); i += batch) {
+                    int end = Math.min(list.size(), i + batch);
+                    boolean special = false;
+                    codes.setLength(0);
+                    for (int j = i; j < end; j++) {
+                        int code = list.get(j);
+                        if (code == KeyEvent.KEYCODE_POUND || code == KeyEvent.KEYCODE_STAR) special = true;
+                        if (multiArg) {
+                            codes.append(codes.length() == 0 ? "input keyevent " : " ").append(code);
+                        } else {
+                            if (codes.length() > 0) codes.append("; ");
+                            codes.append("input keyevent ").append(code);
+                        }
+                    }
                     if (!inCall(ctx)) { aborted = true; return false; }
-                    // # ו-* (ובכל חלק חדש) רק כשמסך השיחה בחזית; אחרת היו נלחצים בחוץ
-                    boolean check = i == 0 || c == '#' || c == '*' || sent % FOCUS_CHECK_EVERY == 0;
-                    if (check && !ensureCallUi(ctx, sh)) return false;
-                    if (sh.run("input keyevent " + code) == null) return false;
-                    sent++;
-                    if (!sleepInCall(ctx, gap)) { aborted = true; return false; }
+                    if ((first || special) && !ensureCallUi(ctx, sh)) return false;
+                    first = false;
+                    if (sh.run(codes.toString()) == null) return false;
+                    if (gap > 0 && !sleepInCall(ctx, gap)) { aborted = true; return false; }
                 }
             }
             return true;

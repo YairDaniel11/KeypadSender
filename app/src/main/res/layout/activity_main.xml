@@ -66,6 +66,21 @@
         android:textColor="?attr/colorAccent"
         android:textSize="12sp" />
 
+    <!-- מעבר מהיר לשיחה פעילה (מוצג רק בזמן שיחה) -->
+    <Button
+        android:id="@+id/btn_goto_call"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="4dp"
+        android:background="?attr/bgBtnTonal"
+        android:minHeight="0dp"
+        android:text="@string/btn_goto_call"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
     <!-- בחירת שלוחה -->
     <RadioGroup
         android:id="@+id/ext_group"

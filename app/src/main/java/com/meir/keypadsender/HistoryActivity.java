@@ -46,8 +46,16 @@ public class HistoryActivity extends Activity {
         });
         findViewById(R.id.btn_clear_history).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                Prefs.clearHistory(HistoryActivity.this);
-                reload();
+                new android.app.AlertDialog.Builder(HistoryActivity.this)
+                        .setMessage(R.string.confirm_clear_history)
+                        .setPositiveButton(R.string.yes, new android.content.DialogInterface.OnClickListener() {
+                            @Override public void onClick(android.content.DialogInterface d, int w) {
+                                Prefs.clearHistory(HistoryActivity.this);
+                                reload();
+                            }
+                        })
+                        .setNegativeButton(R.string.no, null)
+                        .show();
             }
         });
         list.requestFocus();

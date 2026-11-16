@@ -34,6 +34,12 @@
     <string name="label_p3">המתנה לפני תחילת ההקלדה (פסיקים)</string>
     <string name="cb_root">יש רוט: שליחה בתוך שיחה קיימת באמצעות הקשות מערכת (אחרת: צלילים דרך הרמקול, ניסיוני)</string>
     <string name="label_gap">מרווח בין הקשות (מילישניות, ברירת מחדל 250)</string>
+    <string name="label_batch">מהירות: כמה מקשים בכל פקודה (גבוה = מהיר יותר; 1 = מקש-מקש. אם נשלח רק המקש הראשון בכל קבוצה – הורד ל-1)</string>
+    <string name="btn_goto_call">לשיחה הפעילה</string>
+    <string name="toast_no_active_call">אין שיחה פעילה</string>
+    <string name="confirm_clear_history">למחוק את כל ההיסטוריה?</string>
+    <string name="yes">כן</string>
+    <string name="no">לא</string>
     <string name="label_cmd">פקודת רוט לחזרה למסך השיחה (ריק = בלי)</string>
     <string name="btn_test_root">בדיקת רוט</string>
     <string name="btn_save">שמור</string>

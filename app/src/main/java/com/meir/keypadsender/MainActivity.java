@@ -95,8 +95,50 @@ public class MainActivity extends Activity {
             }
         });
 
+        gotoCall = findViewById(R.id.btn_goto_call);
+        gotoCall.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { gotoActiveCall(); }
+        });
+
         // פוקוס התחלתי: שדה הטקסט (הפעולה הנפוצה); השלוחה זמינה בחץ למעלה
         input.requestFocus();
+    }
+
+    private View gotoCall;
+
+    /** מעלה את מסך השיחה הפעילה לחזית (TelecomManager, ואם אין - פקודות רוט). */
+    private void gotoActiveCall() {
+        if (CallTracker.status(this) == CallTracker.Status.IDLE) {
+            Toast.makeText(this, R.string.toast_no_active_call, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (CallScreen.showViaTelecom(this)) return;
+        if (!Prefs.useRoot(this)) return;
+        final Context app = getApplicationContext();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                RootShell sh = RootShell.open();
+                if (sh == null) return;
+                try {
+                    String cmd = Prefs.getInCallCmd(app).trim();
+                    if (cmd.length() > 0) sh.run(cmd);
+                    else sh.run(CallScreen.FALLBACK_CMDS[0]);
+                } catch (Exception ignored) {
+                } finally {
+                    sh.close();
+                }
+            }
+        }, "goto-call").start();
+    }
+
+    /** חזור במסך הראשי = יציאה מהאפליקציה (למסך הבית), לא חזרה למסך קודם. */
+    @Override
+    public void onBackPressed() {
+        finish();
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(home);
     }
 
     private static final int REQ_HISTORY = 77;
@@ -181,6 +223,9 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStatus() {
+        boolean inCall = PermissionUtil.hasAll(this, PermissionUtil.ALL)
+                && CallTracker.status(this) != CallTracker.Status.IDLE;
+        gotoCall.setVisibility(inCall ? View.VISIBLE : View.GONE);
         if (!PermissionUtil.hasAll(this, PermissionUtil.ALL)) {
             status.setText(R.string.status_need_permission);
             return;
