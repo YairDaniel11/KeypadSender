@@ -16,6 +16,9 @@ final class CallScreen {
 
     private static final long SWITCH_WAIT_MS = 1200;
 
+    /** מה נוסה ומה היה בחזית (לאבחון, מוצג בהודעה). */
+    static volatile String lastInfo = "";
+
     /** דרך TelecomManager (API 23+, בלי רוט). true = הבקשה נשלחה (לא מבטיח שהמסך עלה). */
     static boolean showViaTelecom(Context ctx) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
@@ -88,6 +91,7 @@ final class CallScreen {
      */
     static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
+        lastInfo = "התחלה: " + w;
         if (isCallUi(w)) return true;
         List<String> cmds = new ArrayList<String>();
         // קודם מה שהמערכת עצמה מכירה כמסך שיחה (לא מקלדת חיוג)
@@ -98,12 +102,16 @@ final class CallScreen {
         for (String c : cmds) {
             sh.run(c);
             Thread.sleep(SWITCH_WAIT_MS);
-            if (isCallUi(focusedWindow(sh))) return true;
+            String fw = focusedWindow(sh);
+            lastInfo += "\n" + c.replace("am start -n ", "") + " => " + fw;
+            if (isCallUi(fw)) return true;
         }
         // אחרון: TelecomManager (במכשירים מסוימים הוא פותח את מקלדת החיוג)
         if (showViaTelecom(ctx)) {
             Thread.sleep(SWITCH_WAIT_MS);
-            if (isCallUi(focusedWindow(sh))) return true;
+            String fw = focusedWindow(sh);
+            lastInfo += "\ntelecom => " + fw;
+            if (isCallUi(fw)) return true;
         }
         return false;
     }
