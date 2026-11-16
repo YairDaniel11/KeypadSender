@@ -32,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/label_number"
                 android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/edit_number"
@@ -84,7 +84,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/label_gap"
                 android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/edit_gap"
@@ -110,7 +110,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/label_batch"
                 android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/edit_batch"
@@ -136,7 +136,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/label_map"
                 android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/edit_map"
@@ -162,7 +162,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/label_cmd"
                 android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/edit_cmd"

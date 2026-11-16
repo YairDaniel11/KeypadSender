@@ -23,13 +23,11 @@
         android:focusable="true"
         android:focusableInTouchMode="true">
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/help_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:lineSpacingMultiplier="1.15"
-            android:text="@string/help_text"
-            android:textColor="?attr/colorTextPrimary"
-            android:textSize="15sp" />
+            android:orientation="vertical"
+            android:padding="12dp" />
     </ScrollView>
 </LinearLayout>
