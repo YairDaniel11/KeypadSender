@@ -125,8 +125,17 @@ public class MainActivity extends Activity {
                         final String w = (ok ? "הצלחה\n" : "לא נמצא מסך שיחה\n") + CallScreen.lastInfo;
                         runOnUiThread(new Runnable() {
                             @Override public void run() {
+                                android.widget.ScrollView sv = new android.widget.ScrollView(MainActivity.this);
+                                TextView tv = new TextView(MainActivity.this);
+                                tv.setText(w);
+                                tv.setTextSize(9);
+                                tv.setPadding(8, 8, 8, 8);
+                                tv.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+                                tv.setFocusable(true);
+                                sv.addView(tv);
+                                sv.setFocusable(true);
                                 new android.app.AlertDialog.Builder(MainActivity.this)
-                                        .setMessage(w)
+                                        .setView(sv)
                                         .setPositiveButton(android.R.string.ok, null)
                                         .show();
                             }
