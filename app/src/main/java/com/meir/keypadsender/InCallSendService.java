@@ -30,6 +30,7 @@ public class InCallSendService extends Service {
     private static final int TONE_MS = 120;
 
     private final Handler main = new Handler(Looper.getMainLooper());
+    private volatile boolean aborted; // השיחה הסתיימה באמצע השליחה
 
     public static void start(Context ctx, String digits) {
         Intent i = new Intent(ctx, InCallSendService.class);
@@ -89,7 +90,8 @@ public class InCallSendService extends Service {
                     if (wl != null && wl.isHeld()) wl.release();
                     stopSelf(startId);
                 }
-                toast(ok ? R.string.toast_sent : R.string.toast_send_failed);
+                toast(ok ? R.string.toast_sent
+                        : aborted ? R.string.toast_aborted : R.string.toast_send_failed);
             }
         }, "incall-send").start();
         return START_NOT_STICKY;
@@ -110,6 +112,22 @@ public class InCallSendService extends Service {
         return -1;
     }
 
+    /** השיחה עם הקו עדיין פעילה? (אחרת אסור להזריק מקשים: הם היו נכנסים לאפליקציה אחרת). */
+    private static boolean inCall(Context ctx) {
+        return CallTracker.status(ctx) == CallTracker.Status.IN_CALL_TARGET;
+    }
+
+    /** ישן במקטעים קצרים; false = השיחה הסתיימה בינתיים. */
+    private static boolean sleepInCall(Context ctx, long ms) throws InterruptedException {
+        long end = System.currentTimeMillis() + ms;
+        while (true) {
+            if (!inCall(ctx)) return false;
+            long left = end - System.currentTimeMillis();
+            if (left <= 0) return true;
+            Thread.sleep(Math.min(100, left));
+        }
+    }
+
     private static boolean waitForCall(Context ctx) throws InterruptedException {
         long end = System.currentTimeMillis() + WAIT_CALL_MS;
         while (System.currentTimeMillis() < end) {
@@ -123,20 +141,23 @@ public class InCallSendService extends Service {
         RootShell sh = RootShell.open();
         if (sh == null) return false;
         try {
+            if (!inCall(ctx)) { aborted = true; return false; }
             String cmd = Prefs.getInCallCmd(ctx).trim();
             if (cmd.length() > 0) {
                 sh.run(cmd);
-                Thread.sleep(SWITCH_DELAY_MS);
+                if (!sleepInCall(ctx, SWITCH_DELAY_MS)) { aborted = true; return false; }
             }
             int gap = Math.max(0, Prefs.getGapMs(ctx));
             for (int k = 0; k < parts.length; k++) {
-                if (delays[k] > 0) Thread.sleep(delays[k]);
+                if (delays[k] > 0 && !sleepInCall(ctx, delays[k])) { aborted = true; return false; }
                 String digits = parts[k];
                 for (int i = 0; i < digits.length(); i++) {
                     int code = keyCode(digits.charAt(i));
                     if (code < 0) continue;
+                    // בדיקה צמודה לפני כל הקשה: אחרי ניתוק לא מזריקים דבר
+                    if (!inCall(ctx)) { aborted = true; return false; }
                     if (sh.run("input keyevent " + code) == null) return false;
-                    Thread.sleep(gap);
+                    if (!sleepInCall(ctx, gap)) { aborted = true; return false; }
                 }
             }
             return true;
@@ -159,6 +180,7 @@ public class InCallSendService extends Service {
                 else if (c == '#') tone = ToneGenerator.TONE_DTMF_P;
                 else if (c == '*') tone = ToneGenerator.TONE_DTMF_S;
                 else continue;
+                if (!inCall(ctx)) { aborted = true; return false; }
                 tg.startTone(tone, TONE_MS);
                 Thread.sleep(TONE_MS + gap);
             }

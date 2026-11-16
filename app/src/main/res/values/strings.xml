@@ -27,7 +27,7 @@
     <string name="label_p2">המתנה בין השלוחה לתת-שלוחה 2 (פסיקים)</string>
     <string name="label_p3">המתנה לפני תחילת ההקלדה (פסיקים)</string>
     <string name="cb_root">יש רוט: שליחה בתוך שיחה קיימת באמצעות הקשות מערכת (אחרת: צלילים דרך הרמקול, ניסיוני)</string>
-    <string name="label_gap">מרווח בין הקשות בשיחה קיימת (מילישניות)</string>
+    <string name="label_gap">מרווח בין הקשות (מילישניות, ברירת מחדל 250)</string>
     <string name="label_cmd">פקודת רוט לחזרה למסך השיחה (ריק = בלי)</string>
     <string name="btn_test_root">בדיקת רוט</string>
     <string name="btn_save">שמור</string>
@@ -40,6 +40,7 @@
     <string name="toast_other_call">אתה בשיחה עם מספר אחר – לא נשלח</string>
     <string name="toast_unknown_call">אתה בשיחה עם מספר לא מזוהה – לא נשלח</string>
     <string name="toast_sent">הרצף נשלח</string>
+    <string name="toast_aborted">השיחה הסתיימה – השליחה הופסקה</string>
     <string name="toast_send_failed">השליחה בשיחה נכשלה</string>
     <string name="toast_root_ok">רוט זמין</string>
     <string name="toast_root_fail">אין גישת רוט</string>
