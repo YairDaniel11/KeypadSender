@@ -33,8 +33,15 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Bump versionCode to run number
-        run: sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" app/build.gradle
+      - name: Set version (versionCode = run number, versionName = 1.N)
+        # גרסה 1.0 = ריצה 24 (האחרונה לפני המעבר לגרסאות). כל ריצה חדשה מעלה את N ב-1: 1.1, 1.2, ...
+        run: |
+          MINOR=$(( ${{ github.run_number }} - 24 ))
+          VERSION="1.${MINOR}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${VERSION}\"/" app/build.gradle
+          grep -n "versionCode\|versionName" app/build.gradle
 
       - name: Unit tests
         run: gradle testDebugUnitTest --no-daemon
@@ -60,6 +67,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          APK="${REPO_NAME}-v${{ github.run_number }}.apk"
+          APK="${REPO_NAME}-v${VERSION}.apk"
           cp app/build/outputs/apk/release/*.apk "$APK"
-          gh release create "v${{ github.run_number }}" "$APK"             --title "${REPO_NAME} v${{ github.run_number }}"             --notes "${REPO_NAME} build ${{ github.run_number }} (commit ${GITHUB_SHA::7})"             --target "$GITHUB_SHA"
+          gh release create "v${VERSION}" "$APK"             --title "${REPO_NAME} v${VERSION}"             --notes "${REPO_NAME} version ${VERSION} (build ${{ github.run_number }}, commit ${GITHUB_SHA::7})"             --target "$GITHUB_SHA"
