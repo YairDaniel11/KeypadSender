@@ -44,6 +44,11 @@ public class SettingsActivity extends Activity {
                 startActivity(new android.content.Intent(SettingsActivity.this, ExtSettingsActivity.class));
             }
         });
+        findViewById(R.id.btn_help).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivity(new android.content.Intent(SettingsActivity.this, HelpActivity.class));
+            }
+        });
         findViewById(R.id.btn_test_root).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { testRoot(); }
         });
