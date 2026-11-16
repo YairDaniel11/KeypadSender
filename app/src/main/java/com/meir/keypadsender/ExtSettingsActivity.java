@@ -35,6 +35,9 @@ public class ExtSettingsActivity extends Activity {
             ((EditText) r.findViewById(R.id.row_number)).setText(Prefs.getExtNumber(this, i));
             ((EditText) r.findViewById(R.id.row_seq)).setText(Prefs.getExtSeq(this, i));
             ((EditText) r.findViewById(R.id.row_suffix)).setText(Prefs.getExtSuffix(this, i));
+            // כל השורות חולקות את אותם מזהי שדות; בלי זה שחזור מצב (סיבוב/הריגת תהליך)
+            // היה מעתיק את ערכי השורה האחרונה לכולן
+            r.setSaveFromParentEnabled(false);
             rows.addView(r);
             rowViews[i - 1] = r;
         }
