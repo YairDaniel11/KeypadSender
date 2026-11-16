@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">שולח מקשים</string>
+
+    <string name="title_main">הקלד טקסט</string>
+    <string name="label_ext">שלוחה:</string>
+    <string name="ext1">1 – חיפוש כללי</string>
+    <string name="ext2">2 – שמיעת מוזיקה</string>
+    <string name="ext3">3 – שמיעת מדיה</string>
+    <string name="hint_input">הקלד כאן…</string>
+    <string name="label_preview">מקשים שיישלחו:</string>
+    <string name="warn_unsupported">תווים שלא יישלחו: %1$s</string>
+    <string name="btn_send">שלח</string>
+    <string name="btn_settings">הגדרות</string>
+
+    <string name="status_need_permission">חסרות הרשאות – ייבקשו בשליחה</string>
+    <string name="status_no_number">לא הוגדר מספר קו – יש להיכנס להגדרות</string>
+    <string name="status_idle">לא בשיחה: יחויג %1$s ותישלח שלוחה %2$d</string>
+    <string name="status_in_target">בשיחה עם הקו: יישלח רצף ההקשות בלבד</string>
+    <string name="status_in_other">בשיחה עם מספר אחר: לא תתבצע שליחה</string>
+    <string name="status_in_unknown">בשיחה עם מספר לא מזוהה: לא תתבצע שליחה</string>
+
+    <string name="title_settings">הגדרות</string>
+    <string name="label_number">מספר הקו (לחיוג אוטומטי)</string>
+    <string name="label_p1">המתנה לפני בחירת שלוחה (פסיקים, כל אחד ≈ 2 שניות)</string>
+    <string name="label_p2">המתנה בין השלוחה לתת-שלוחה 2 (פסיקים)</string>
+    <string name="label_p3">המתנה לפני תחילת ההקלדה (פסיקים)</string>
+    <string name="cb_root">יש רוט: שליחה בתוך שיחה קיימת באמצעות הקשות מערכת (אחרת: צלילים דרך הרמקול, ניסיוני)</string>
+    <string name="label_gap">מרווח בין הקשות בשיחה קיימת (מילישניות)</string>
+    <string name="label_cmd">פקודת רוט לחזרה למסך השיחה (ריק = בלי)</string>
+    <string name="btn_test_root">בדיקת רוט</string>
+    <string name="btn_save">שמור</string>
+
+    <string name="toast_saved">נשמר</string>
+    <string name="toast_no_number">יש להגדיר מספר קו בהגדרות</string>
+    <string name="toast_empty">אין טקסט לשליחה</string>
+    <string name="toast_airplane">מצב טיסה פעיל – אי אפשר לחייג</string>
+    <string name="toast_no_permission">חסרות הרשאות – לא נשלח</string>
+    <string name="toast_other_call">אתה בשיחה עם מספר אחר – לא נשלח</string>
+    <string name="toast_unknown_call">אתה בשיחה עם מספר לא מזוהה – לא נשלח</string>
+    <string name="toast_sent">הרצף נשלח</string>
+    <string name="toast_send_failed">השליחה בשיחה נכשלה</string>
+    <string name="toast_root_ok">רוט זמין</string>
+    <string name="toast_root_fail">אין גישת רוט</string>
+</resources>

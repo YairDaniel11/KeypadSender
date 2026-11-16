@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBgMain"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorHeader"
+        android:padding="10dp"
+        android:text="@string/title_settings"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_number"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@+id/btn_save"
+                android:nextFocusDown="@+id/edit_p1" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_p1"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_p1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="2"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/edit_number"
+                android:nextFocusDown="@+id/edit_p2" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_p2"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_p2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="2"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/edit_p1"
+                android:nextFocusDown="@+id/edit_p3" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_p3"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_p3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="2"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/edit_p2"
+                android:nextFocusDown="@+id/cb_root" />
+
+            <CheckBox
+                android:id="@+id/cb_root"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/cb_root"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/edit_p3"
+                android:nextFocusDown="@+id/edit_gap" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_gap"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_gap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="5"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/cb_root"
+                android:nextFocusDown="@+id/edit_cmd" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_cmd"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <EditText
+                android:id="@+id/edit_cmd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layoutDirection="ltr"
+                android:inputType="textNoSuggestions"
+                android:textColor="?attr/colorTextPrimary"
+                android:nextFocusUp="@id/edit_gap"
+                android:nextFocusDown="@+id/btn_test_root" />
+
+            <Button
+                android:id="@+id/btn_test_root"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_round_button"
+                android:text="@string/btn_test_root"
+                android:textColor="@color/button_dark_text"
+                android:nextFocusUp="@id/edit_cmd"
+                android:nextFocusDown="@+id/btn_save" />
+
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_round_button"
+                android:text="@string/btn_save"
+                android:textColor="@color/button_dark_text"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:nextFocusUp="@id/btn_test_root"
+                android:nextFocusDown="@id/edit_number" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

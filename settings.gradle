@@ -1,0 +1,2 @@
+rootProject.name = "KeypadSender"
+include ':app'

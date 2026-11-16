@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBgMain"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorHeader"
+        android:padding="10dp"
+        android:text="@string/title_main"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="?attr/colorAccent"
+        android:textSize="14sp" />
+
+    <RadioGroup
+        android:id="@+id/ext_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_ext1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ext1"
+            android:textColor="?attr/colorTextPrimary"
+            android:nextFocusUp="@+id/btn_settings"
+            android:nextFocusDown="@+id/rb_ext2" />
+
+        <RadioButton
+            android:id="@+id/rb_ext2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ext2"
+            android:textColor="?attr/colorTextPrimary"
+            android:nextFocusUp="@id/rb_ext1"
+            android:nextFocusDown="@+id/rb_ext3" />
+
+        <RadioButton
+            android:id="@+id/rb_ext3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ext3"
+            android:textColor="?attr/colorTextPrimary"
+            android:nextFocusUp="@id/rb_ext2"
+            android:nextFocusDown="@+id/input" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/input"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="12dp"
+        android:gravity="top|start"
+        android:hint="@string/hint_input"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:textColor="?attr/colorTextPrimary"
+        android:textColorHint="?attr/colorTextSecondary"
+        android:textSize="20sp"
+        android:nextFocusUp="@id/rb_ext3"
+        android:nextFocusDown="@+id/btn_send" />
+
+    <TextView
+        android:id="@+id/warn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:textColor="?attr/colorTextSecondary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:text="@string/label_preview"
+        android:textColor="?attr/colorTextSecondary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/preview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="6dp"
+        android:ellipsize="start"
+        android:layoutDirection="ltr"
+        android:maxLines="2"
+        android:textColor="?attr/colorTextPrimary"
+        android:textDirection="ltr"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btn_send"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:background="@drawable/bg_round_button"
+        android:text="@string/btn_send"
+        android:textColor="@color/button_dark_text"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:nextFocusUp="@id/input"
+        android:nextFocusDown="@+id/btn_settings" />
+
+    <Button
+        android:id="@+id/btn_settings"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/bg_round_button"
+        android:text="@string/btn_settings"
+        android:textColor="@color/button_dark_text"
+        android:textSize="18sp"
+        android:nextFocusUp="@id/btn_send"
+        android:nextFocusDown="@id/rb_ext1" />
+
+</LinearLayout>
