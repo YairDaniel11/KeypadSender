@@ -15,7 +15,8 @@ import java.lang.reflect.Method;
  * ההזרקה אסינכרונית וה-UP נשלח מיד אחרי ה-DOWN, כדי שהמערכת לא תפרש מקש (במיוחד #) כלחיצה ארוכה.
  */
 public final class Injector {
-    private static final int HOLD_MS = 30;
+    private static final int HOLD_MS = 90;     // DTMF: צליל קצר מדי לא מזוהה בקו
+    private static final int MIN_GAP_MS = 70; // הפסקה מינימלית בין צלילים
 
     public static void main(String[] args) {
         try {
@@ -38,7 +39,7 @@ public final class Injector {
                 String[] t = line.trim().split("\\s+");
                 if (t.length == 0 || t[0].length() == 0) continue;
                 boolean ok = true;
-                long gap = Long.parseLong(t[0]);
+                long gap = Math.max(MIN_GAP_MS, Long.parseLong(t[0]));
                 for (int i = 1; i < t.length; i++) {
                     int code = Integer.parseInt(t[i]);
                     long now = SystemClock.uptimeMillis();
@@ -48,7 +49,7 @@ public final class Injector {
                     long up = SystemClock.uptimeMillis();
                     ok &= send(im, inject, new KeyEvent(now, up, KeyEvent.ACTION_UP, code, 0, 0, -1, 0,
                             0, InputDevice.SOURCE_KEYBOARD));
-                    if (gap > 0 && i < t.length - 1) Thread.sleep(gap);
+                    Thread.sleep(gap);
                 }
                 System.out.println(ok ? "OK" : "ERR");
                 System.out.flush();
