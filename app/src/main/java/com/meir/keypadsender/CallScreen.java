@@ -54,6 +54,8 @@ final class CallScreen {
     static boolean isCallUi(String w) {
         String l = w.toLowerCase();
         if (l.contains("keypadsender")) return false;
+        // מקלדת החיוג (Dialtacts/Dialpad) היא לא מסך השיחה
+        if (l.contains("dialtacts") || l.contains("dialpad") || l.contains("contacts")) return false;
         return l.contains("phone") || l.contains("dialer") || l.contains("incall")
                 || l.contains("telecom") || l.contains("call");
     }
@@ -72,6 +74,7 @@ final class CallScreen {
                 String l = comp.toLowerCase();
                 if (l.contains("keypadsender")) continue;
                 if (!(l.contains("incall") || l.contains("call"))) continue;
+                if (l.contains("dialtacts") || l.contains("dialpad")) continue;
                 String c = "am start -n " + comp;
                 if (!cmds.contains(c)) cmds.add(c);
             }
@@ -86,17 +89,19 @@ final class CallScreen {
     static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
         if (isCallUi(w)) return true;
-        if (showViaTelecom(ctx)) {
-            Thread.sleep(SWITCH_WAIT_MS);
-            if (isCallUi(focusedWindow(sh))) return true;
-        }
         List<String> cmds = new ArrayList<String>();
-        String user = Prefs.getInCallCmd(ctx).trim();
-        if (user.length() > 0) cmds.add(user);
+        // קודם מה שהמערכת עצמה מכירה כמסך שיחה (לא מקלדת חיוג)
         for (String c : discoverCommands(sh)) if (!cmds.contains(c)) cmds.add(c);
+        String user = Prefs.getInCallCmd(ctx).trim();
+        if (user.length() > 0 && !cmds.contains(user)) cmds.add(user);
         for (String c : FALLBACK_CMDS) if (!cmds.contains(c)) cmds.add(c);
         for (String c : cmds) {
             sh.run(c);
+            Thread.sleep(SWITCH_WAIT_MS);
+            if (isCallUi(focusedWindow(sh))) return true;
+        }
+        // אחרון: TelecomManager (במכשירים מסוימים הוא פותח את מקלדת החיוג)
+        if (showViaTelecom(ctx)) {
             Thread.sleep(SWITCH_WAIT_MS);
             if (isCallUi(focusedWindow(sh))) return true;
         }

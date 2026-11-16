@@ -120,7 +120,15 @@ public class MainActivity extends Activity {
                 RootShell sh = RootShell.open();
                 if (sh == null) { CallScreen.showViaTelecom(app); return; }
                 try {
-                    CallScreen.bringToFront(app, sh);
+                    if (!CallScreen.bringToFront(app, sh)) {
+                        final String w = CallScreen.focusedWindow(sh);
+                        runOnUiThread(new Runnable() {
+                            @Override public void run() {
+                                Toast.makeText(MainActivity.this, "לא נמצא מסך שיחה. בחזית: " + w,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     sh.close();
