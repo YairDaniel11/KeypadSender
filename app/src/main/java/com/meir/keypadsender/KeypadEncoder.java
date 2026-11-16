@@ -126,6 +126,38 @@ public final class KeypadEncoder {
         return out.toString();
     }
 
+    /** טבלת ההקשות בפועל (ברירת המחדל + התאמות המשתמש), לעזרה: שורה לכל מקש. */
+    public static String describeTable(String mapSpec) {
+        java.util.Map<Character, int[]> custom = parseMap(mapSpec);
+        java.util.TreeMap<Character, java.util.List<int[]>> byKey =
+                new java.util.TreeMap<Character, java.util.List<int[]>>();
+        java.util.Map<Character, int[]> all = new java.util.LinkedHashMap<Character, int[]>();
+        for (int i = 0; i < KEY.length; i++) {
+            if (KEY[i] != 0) all.put((char) (BASE + i), new int[]{KEY[i], PRESSES[i]});
+        }
+        all.putAll(custom);
+        for (java.util.Map.Entry<Character, int[]> e : all.entrySet()) {
+            Character k = (char) e.getValue()[0];
+            java.util.List<int[]> l = byKey.get(k);
+            if (l == null) { l = new java.util.ArrayList<int[]>(); byKey.put(k, l); }
+            l.add(new int[]{e.getKey(), e.getValue()[1]});
+        }
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<Character, java.util.List<int[]>> e : byKey.entrySet()) {
+            java.util.List<int[]> l = e.getValue();
+            java.util.Collections.sort(l, new java.util.Comparator<int[]>() {
+                @Override public int compare(int[] a, int[] b) { return a[1] - b[1]; }
+            });
+            sb.append("מקש ").append(e.getKey()).append(":  ");
+            for (int i = 0; i < l.size(); i++) {
+                if (i > 0) sb.append("   ");
+                sb.append((char) l.get(i)[0]).append(" = ").append(l.get(i)[1]);
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
+
     /** תווים שהמרה תדלג עליהם (ללא כפילויות), לתצוגת אזהרה. */
     public static String findUnsupported(String text) {
         return findUnsupported(text, null);
