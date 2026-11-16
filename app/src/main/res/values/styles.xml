@@ -1,19 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="android:Theme">
+    <!-- Holo כבסיס (כמו באפליקציות האחרות): שדות טקסט, סמן ובחירה נראים נכון בשתי הערכות -->
+    <style name="AppTheme" parent="android:Theme.Holo.NoActionBar">
         <item name="colorBgMain">@color/bg_dark</item>
-        <item name="colorHeader">@color/header_black</item>
-        <item name="colorAccent">@color/accent_teal</item>
+        <item name="colorHeader">@color/header_dark</item>
+        <item name="colorAccent">@color/accent_dark</item>
+        <item name="colorOnAccent">@color/on_accent_dark</item>
         <item name="colorTextPrimary">@color/text_white</item>
         <item name="colorTextSecondary">@color/text_light_gray</item>
+        <item name="bgInput">@drawable/bg_input_d</item>
+        <item name="bgCard">@drawable/bg_card_d</item>
+        <item name="bgBtnFilled">@drawable/bg_btn_filled_d</item>
+        <item name="bgBtnTonal">@drawable/bg_btn_tonal_d</item>
+        <item name="bgIconBtn">@drawable/bg_icon_btn_d</item>
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:statusBarColor">@color/header_dark</item>
+        <item name="android:navigationBarColor">@color/bg_dark</item>
+        <item name="android:textColorPrimary">@color/text_white</item>
+        <item name="android:textColorHint">@color/text_light_gray</item>
     </style>
 
     <style name="AppTheme.Dark" parent="AppTheme" />
 
-    <style name="AppTheme.Light" parent="AppTheme">
+    <style name="AppTheme.Light" parent="android:Theme.Holo.Light.NoActionBar">
         <item name="colorBgMain">@color/bg_light</item>
         <item name="colorHeader">@color/header_light</item>
+        <item name="colorAccent">@color/accent_light</item>
+        <item name="colorOnAccent">@color/on_accent_light</item>
         <item name="colorTextPrimary">@color/text_dark</item>
         <item name="colorTextSecondary">@color/text_dark_secondary</item>
+        <item name="bgInput">@drawable/bg_input_l</item>
+        <item name="bgCard">@drawable/bg_card_l</item>
+        <item name="bgBtnFilled">@drawable/bg_btn_filled_l</item>
+        <item name="bgBtnTonal">@drawable/bg_btn_tonal_l</item>
+        <item name="bgIconBtn">@drawable/bg_icon_btn_l</item>
+        <item name="android:windowBackground">@color/bg_light</item>
+        <item name="android:statusBarColor">@color/header_light</item>
+        <item name="android:navigationBarColor">@color/bg_light</item>
+        <item name="android:textColorPrimary">@color/text_dark</item>
+        <item name="android:textColorHint">@color/text_dark_secondary</item>
     </style>
 </resources>

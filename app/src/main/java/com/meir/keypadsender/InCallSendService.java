@@ -22,6 +22,10 @@ import android.widget.Toast;
 public class InCallSendService extends Service {
 
     private static final String EXTRA_DIGITS = "digits";
+    private static final String EXTRA_PARTS = "parts";
+    private static final String EXTRA_DELAYS = "delays";
+    private static final String EXTRA_WAIT = "wait";
+    private static final int WAIT_CALL_MS = 40000; // המתנה מקסימלית להתחלת השיחה
     private static final int SWITCH_DELAY_MS = 1200; // המתנה אחרי חזרה למסך השיחה
     private static final int TONE_MS = 120;
 
@@ -33,13 +37,31 @@ public class InCallSendService extends Service {
         ctx.startService(i);
     }
 
+    /**
+     * אחרי חיוג של המספר בלבד: ממתין שהשיחה תתחבר, ואז שולח כל חלק (שלוחה, 2, ההקשות)
+     * אחרי ההשהיה שלו במילישניות. דורש רוט.
+     */
+    public static void startScripted(Context ctx, String[] parts, long[] delaysMs) {
+        Intent i = new Intent(ctx, InCallSendService.class);
+        i.putExtra(EXTRA_PARTS, parts);
+        i.putExtra(EXTRA_DELAYS, delaysMs);
+        i.putExtra(EXTRA_WAIT, true);
+        ctx.startService(i);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, final int startId) {
-        final String digits = intent == null ? null : intent.getStringExtra(EXTRA_DIGITS);
-        if (digits == null) {
+        String d = intent == null ? null : intent.getStringExtra(EXTRA_DIGITS);
+        String[] p = intent == null ? null : intent.getStringArrayExtra(EXTRA_PARTS);
+        long[] dl = intent == null ? null : intent.getLongArrayExtra(EXTRA_DELAYS);
+        if (p == null && d != null) { p = new String[]{d}; dl = new long[]{0}; }
+        if (p == null || dl == null || dl.length != p.length) {
             stopSelf(startId);
             return START_NOT_STICKY;
         }
+        final String[] parts = p;
+        final long[] delays = dl;
+        final boolean wait = intent.getBooleanExtra(EXTRA_WAIT, false);
         final Context app = getApplicationContext();
         new Thread(new Runnable() {
             @Override public void run() {
@@ -51,13 +73,23 @@ public class InCallSendService extends Service {
                 }
                 boolean ok = false;
                 try {
-                    ok = Prefs.useRoot(app) ? sendRoot(app, digits) : sendTones(app, digits);
+                    if (wait && !waitForCall(app)) {
+                        toast(R.string.toast_send_failed);
+                        return;
+                    }
+                    if (Prefs.useRoot(app)) {
+                        ok = sendRoot(app, parts, delays);
+                    } else {
+                        StringBuilder all = new StringBuilder();
+                        for (String part : parts) all.append(part);
+                        ok = sendTones(app, all.toString());
+                    }
                 } catch (Exception ignored) {
                 } finally {
                     if (wl != null && wl.isHeld()) wl.release();
+                    stopSelf(startId);
                 }
                 toast(ok ? R.string.toast_sent : R.string.toast_send_failed);
-                stopSelf(startId);
             }
         }, "incall-send").start();
         return START_NOT_STICKY;
@@ -78,7 +110,16 @@ public class InCallSendService extends Service {
         return -1;
     }
 
-    private boolean sendRoot(Context ctx, String digits) throws Exception {
+    private static boolean waitForCall(Context ctx) throws InterruptedException {
+        long end = System.currentTimeMillis() + WAIT_CALL_MS;
+        while (System.currentTimeMillis() < end) {
+            if (CallTracker.status(ctx) == CallTracker.Status.IN_CALL_TARGET) return true;
+            Thread.sleep(500);
+        }
+        return false;
+    }
+
+    private boolean sendRoot(Context ctx, String[] parts, long[] delays) throws Exception {
         RootShell sh = RootShell.open();
         if (sh == null) return false;
         try {
@@ -88,11 +129,15 @@ public class InCallSendService extends Service {
                 Thread.sleep(SWITCH_DELAY_MS);
             }
             int gap = Math.max(0, Prefs.getGapMs(ctx));
-            for (int i = 0; i < digits.length(); i++) {
-                int code = keyCode(digits.charAt(i));
-                if (code < 0) continue;
-                if (sh.run("input keyevent " + code) == null) return false;
-                Thread.sleep(gap);
+            for (int k = 0; k < parts.length; k++) {
+                if (delays[k] > 0) Thread.sleep(delays[k]);
+                String digits = parts[k];
+                for (int i = 0; i < digits.length(); i++) {
+                    int code = keyCode(digits.charAt(i));
+                    if (code < 0) continue;
+                    if (sh.run("input keyevent " + code) == null) return false;
+                    Thread.sleep(gap);
+                }
             }
             return true;
         } finally {

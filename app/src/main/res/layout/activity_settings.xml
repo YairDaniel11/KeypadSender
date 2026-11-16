@@ -7,13 +7,14 @@
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:background="?attr/colorHeader"
-        android:padding="10dp"
+        android:gravity="center_vertical"
+        android:paddingEnd="20dp"
+        android:paddingStart="20dp"
         android:text="@string/title_settings"
         android:textColor="?attr/colorTextPrimary"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textSize="20sp" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -24,20 +25,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="8dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/label_number"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_number"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="phone"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textDirection="ltr"
+                android:textSize="18sp"
                 android:nextFocusUp="@+id/btn_save"
                 android:nextFocusDown="@+id/edit_p1" />
 
@@ -46,15 +57,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/label_p1"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_p1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="number"
                 android:maxLength="2"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="18sp"
                 android:nextFocusUp="@id/edit_number"
                 android:nextFocusDown="@+id/edit_p2" />
 
@@ -63,15 +83,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/label_p2"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_p2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="number"
                 android:maxLength="2"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="18sp"
                 android:nextFocusUp="@id/edit_p1"
                 android:nextFocusDown="@+id/edit_p3" />
 
@@ -80,15 +109,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/label_p3"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_p3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="number"
                 android:maxLength="2"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="18sp"
                 android:nextFocusUp="@id/edit_p2"
                 android:nextFocusDown="@+id/cb_root" />
 
@@ -97,8 +135,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:background="?attr/bgCard"
+                android:minHeight="44dp"
+                android:padding="8dp"
                 android:text="@string/cb_root"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="13sp"
                 android:nextFocusUp="@id/edit_p3"
                 android:nextFocusDown="@+id/edit_gap" />
 
@@ -107,15 +149,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/label_gap"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_gap"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="number"
                 android:maxLength="5"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="18sp"
                 android:nextFocusUp="@id/cb_root"
                 android:nextFocusDown="@+id/edit_cmd" />
 
@@ -124,37 +175,47 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/label_cmd"
-                android:textColor="?attr/colorTextSecondary" />
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
 
             <EditText
                 android:id="@+id/edit_cmd"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layoutDirection="ltr"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
                 android:inputType="textNoSuggestions"
+                android:layoutDirection="ltr"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
+                android:textSize="16sp"
                 android:nextFocusUp="@id/edit_gap"
                 android:nextFocusDown="@+id/btn_test_root" />
 
             <Button
                 android:id="@+id/btn_test_root"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="44dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_round_button"
+                android:background="?attr/bgBtnTonal"
                 android:text="@string/btn_test_root"
-                android:textColor="@color/button_dark_text"
+                android:textColor="?attr/colorTextPrimary"
+                android:textSize="16sp"
                 android:nextFocusUp="@id/edit_cmd"
                 android:nextFocusDown="@+id/btn_save" />
 
             <Button
                 android:id="@+id/btn_save"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_round_button"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="?attr/bgBtnFilled"
                 android:text="@string/btn_save"
-                android:textColor="@color/button_dark_text"
+                android:textColor="?attr/colorOnAccent"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:nextFocusUp="@id/btn_test_root"

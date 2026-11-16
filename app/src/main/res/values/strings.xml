@@ -4,14 +4,15 @@
 
     <string name="title_main">הקלד טקסט</string>
     <string name="label_ext">שלוחה:</string>
-    <string name="ext1">1 – חיפוש כללי</string>
-    <string name="ext2">2 – שמיעת מוזיקה</string>
-    <string name="ext3">3 – שמיעת מדיה</string>
+    <string name="ext1">1 חיפוש</string>
+    <string name="ext2">2 מוזיקה</string>
+    <string name="ext3">3 מדיה</string>
     <string name="hint_input">הקלד כאן…</string>
     <string name="label_preview">מקשים שיישלחו:</string>
     <string name="warn_unsupported">תווים שלא יישלחו: %1$s</string>
     <string name="btn_send">שלח</string>
     <string name="btn_settings">הגדרות</string>
+    <string name="btn_clear">נקה</string>
 
     <string name="status_need_permission">חסרות הרשאות – ייבקשו בשליחה</string>
     <string name="status_no_number">לא הוגדר מספר קו – יש להיכנס להגדרות</string>

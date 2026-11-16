@@ -2,6 +2,7 @@ package com.meir.keypadsender;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -43,6 +44,13 @@ public class SettingsActivity extends Activity {
         findViewById(R.id.btn_test_root).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { testRoot(); }
         });
+    }
+
+    /** חזור בשדה טקסט = מחיקת תו; רק בשדה ריק יוצאים מהמסך. */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent ev) {
+        if (KeyUtil.backAsDelete(this, ev)) return true;
+        return super.dispatchKeyEvent(ev);
     }
 
     private static int num(EditText e, int def) {

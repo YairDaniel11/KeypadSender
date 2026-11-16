@@ -10,6 +10,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -45,7 +46,8 @@ public class MainActivity extends Activity {
         status = (TextView) findViewById(R.id.status);
         extGroup = (RadioGroup) findViewById(R.id.ext_group);
         Button send = (Button) findViewById(R.id.btn_send);
-        Button settings = (Button) findViewById(R.id.btn_settings);
+        View settings = findViewById(R.id.btn_settings);
+        Button clear = (Button) findViewById(R.id.btn_clear);
 
         int ext = Prefs.getExt(this);
         ((RadioButton) findViewById(ext == 3 ? R.id.rb_ext3 : ext == 2 ? R.id.rb_ext2 : R.id.rb_ext1))
@@ -68,13 +70,32 @@ public class MainActivity extends Activity {
             @Override public void onClick(View v) { trySend(); }
         });
         settings.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { openSettings(); }
+        });
+        clear.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                input.setText("");
+                input.requestFocus();
             }
         });
 
         // פוקוס התחלתי: שדה הטקסט (הפעולה הנפוצה); השלוחה זמינה בחץ למעלה
         input.requestFocus();
+    }
+
+    private void openSettings() {
+        startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    /** חזור בחלונית טקסט = מחיקה (רק בשדה ריק יוצאים); מקש תפריט = הגדרות. */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent ev) {
+        if (KeyUtil.backAsDelete(this, ev)) return true;
+        if (ev.getKeyCode() == KeyEvent.KEYCODE_MENU) {
+            if (ev.getAction() == KeyEvent.ACTION_DOWN && ev.getRepeatCount() == 0) openSettings();
+            return true;
+        }
+        return super.dispatchKeyEvent(ev);
     }
 
     @Override
@@ -171,10 +192,20 @@ public class MainActivity extends Activity {
         }
         switch (CallTracker.status(this)) {
             case IDLE: {
-                String dial = Dialer.buildDialString(number, Prefs.getP1(this), Prefs.getP2(this),
-                        Prefs.getP3(this), selectedExt(), body);
+                boolean root = Prefs.useRoot(this);
+                // עם רוט: מחייגים את המספר בלבד (מחרוזת עם פסיקים נדחית בחלק מהמכשירים
+                // כ"מספר לא תקין") ואחר כך שולחים שלוחה והקשות כשהשיחה מתחברת.
+                String dial = root
+                        ? number.replaceAll("[\\s-]", "")
+                        : Dialer.buildDialString(number, Prefs.getP1(this), Prefs.getP2(this),
+                                Prefs.getP3(this), selectedExt(), body);
                 if (!Dialer.dial(this, dial)) {
                     Toast.makeText(this, R.string.toast_airplane, Toast.LENGTH_LONG).show();
+                } else if (root) {
+                    InCallSendService.startScripted(this,
+                            new String[]{String.valueOf(selectedExt()), "2", body},
+                            new long[]{Prefs.getP1(this) * 2000L, Prefs.getP2(this) * 2000L,
+                                    Prefs.getP3(this) * 2000L});
                 }
                 break;
             }

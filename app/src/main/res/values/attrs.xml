@@ -3,6 +3,13 @@
     <attr name="colorBgMain" format="color" />
     <attr name="colorHeader" format="color" />
     <attr name="colorAccent" format="color" />
+    <attr name="colorOnAccent" format="color" />
     <attr name="colorTextPrimary" format="color" />
     <attr name="colorTextSecondary" format="color" />
+    <!-- drawables לפי ערכת נושא (?attr בתוך drawable לא נתמך לפני API 21, לכן ההפניה היא מה-layout) -->
+    <attr name="bgInput" format="reference" />
+    <attr name="bgCard" format="reference" />
+    <attr name="bgBtnFilled" format="reference" />
+    <attr name="bgBtnTonal" format="reference" />
+    <attr name="bgIconBtn" format="reference" />
 </resources>
