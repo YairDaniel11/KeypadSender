@@ -116,7 +116,10 @@ public class MainActivity extends Activity {
         final boolean root = Prefs.useRoot(this);
         new Thread(new Runnable() {
             @Override public void run() {
-                if (!root) { CallScreen.showViaTelecom(app); return; }
+                if (!root) {
+                    if (!CallScreen.moveCallTaskToFront(app)) CallScreen.showViaTelecom(app);
+                    return;
+                }
                 RootShell sh = RootShell.open();
                 if (sh == null) { CallScreen.showViaTelecom(app); return; }
                 try {

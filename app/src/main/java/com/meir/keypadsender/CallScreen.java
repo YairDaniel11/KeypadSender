@@ -85,6 +85,61 @@ final class CallScreen {
         return cmds;
     }
 
+    private static boolean isCallComponent(android.content.ComponentName c) {
+        if (c == null) return false;
+        String s = c.flattenToString().toLowerCase();
+        if (s.contains("keypadsender") || s.contains("dialtacts")) return false;
+        return s.contains("incall") || s.contains("com.android.phone")
+                || s.contains("dialer") || s.contains("telecom");
+    }
+
+    @SuppressWarnings("deprecation")
+    private static List<android.app.ActivityManager.RunningTaskInfo> tasks(Context ctx) {
+        try {
+            android.app.ActivityManager am =
+                    (android.app.ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            return am.getRunningTasks(50);
+        } catch (Throwable e) {
+            return new ArrayList<android.app.ActivityManager.RunningTaskInfo>();
+        }
+    }
+
+    /** כל המשימות הרצות (לאבחון). */
+    static String taskDump(Context ctx) {
+        StringBuilder sb = new StringBuilder();
+        for (android.app.ActivityManager.RunningTaskInfo t : tasks(ctx)) {
+            sb.append("#").append(t.id).append(" base=")
+                    .append(t.baseActivity == null ? "-" : t.baseActivity.flattenToShortString())
+                    .append(" top=")
+                    .append(t.topActivity == null ? "-" : t.topActivity.flattenToShortString())
+                    .append(" | ");
+        }
+        return sb.toString();
+    }
+
+    /** מעביר לחזית את משימת מסך השיחה (בלי רוט, API עד 20 רואה את כל המשימות). */
+    @SuppressWarnings("deprecation")
+    static boolean moveCallTaskToFront(Context ctx) {
+        try {
+            android.app.ActivityManager.RunningTaskInfo best = null;
+            for (android.app.ActivityManager.RunningTaskInfo t : tasks(ctx)) {
+                if (isCallComponent(t.topActivity) || isCallComponent(t.baseActivity)) {
+                    boolean topIn = t.topActivity != null
+                            && t.topActivity.flattenToString().toLowerCase().contains("incall");
+                    if (best == null || topIn) best = t;
+                    if (topIn) break;
+                }
+            }
+            if (best == null) return false;
+            android.app.ActivityManager am =
+                    (android.app.ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+            am.moveTaskToFront(best.id, 0);
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
     private static String oneLine(RootShell sh, String cmd) throws IOException {
         String o = sh.run(cmd);
         if (o == null) return "";
@@ -99,10 +154,16 @@ final class CallScreen {
     static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
         lastInfo = "התחלה: " + w;
-        lastInfo += "\n[resumed] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'mResumedActivity|ResumedActivity' | head -3");
-        lastInfo += "\n[telecom] " + oneLine(sh, "dumpsys telecom | grep -i -E 'Call TC|mCalls|state' | head -6");
-        lastInfo += "\n[incall] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'incall' | head -4");
+        lastInfo += "\n[tasks] " + taskDump(ctx);
+        lastInfo += "\n[incall] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'incall'");
         if (isCallUi(w)) return true;
+        // הכי אמין: להעביר את המשימה של מסך השיחה לחזית (בלי intent שמסך השיחה עלול לסגור)
+        if (moveCallTaskToFront(ctx)) {
+            Thread.sleep(SWITCH_WAIT_MS);
+            String mw = focusedWindow(sh);
+            lastInfo += "\nmoveTaskToFront => " + mw;
+            if (isCallUi(mw)) return true;
+        }
         List<String> cmds = new ArrayList<String>();
         // קודם מה שהמערכת עצמה מכירה כמסך שיחה (לא מקלדת חיוג)
         for (String c : discoverCommands(sh)) if (!cmds.contains(c)) cmds.add(c);
