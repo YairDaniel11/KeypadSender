@@ -123,6 +123,7 @@ public class MainActivity extends Activity {
                     boolean ok = CallScreen.bringToFront(app, sh);
                     {
                         final String w = (ok ? "הצלחה\n" : "לא נמצא מסך שיחה\n") + CallScreen.lastInfo;
+                        final String saved = saveLog(app, sh, w);
                         runOnUiThread(new Runnable() {
                             @Override public void run() {
                                 android.widget.ScrollView sv = new android.widget.ScrollView(MainActivity.this);
@@ -135,6 +136,7 @@ public class MainActivity extends Activity {
                                 sv.addView(tv);
                                 sv.setFocusable(true);
                                 new android.app.AlertDialog.Builder(MainActivity.this)
+                                        .setTitle(saved)
                                         .setView(sv)
                                         .setPositiveButton(android.R.string.ok, null)
                                         .show();
@@ -147,6 +149,22 @@ public class MainActivity extends Activity {
                 }
             }
         }, "goto-call").start();
+    }
+
+    /** שומר את הלוג בקובץ בזיכרון הפנימי (Download), דרך רוט. מחזיר הודעה על המיקום. */
+    private static String saveLog(Context app, RootShell sh, String text) {
+        try {
+            java.io.File f = new java.io.File(app.getCacheDir(), "keypadsender-log.txt");
+            java.io.FileOutputStream o = new java.io.FileOutputStream(f);
+            o.write(text.getBytes("UTF-8"));
+            o.close();
+            f.setReadable(true, false);
+            String dest = "/sdcard/Download/keypadsender-log.txt";
+            sh.run("mkdir -p /sdcard/Download; cp '" + f.getAbsolutePath() + "' " + dest);
+            return "נשמר: " + dest;
+        } catch (Exception e) {
+            return "שמירת לוג נכשלה";
+        }
     }
 
     /** חזור במסך הראשי = יציאה מהאפליקציה (למסך הבית), לא חזרה למסך קודם. */
