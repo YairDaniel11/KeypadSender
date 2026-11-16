@@ -85,6 +85,13 @@ final class CallScreen {
         return cmds;
     }
 
+    private static String oneLine(RootShell sh, String cmd) throws IOException {
+        String o = sh.run(cmd);
+        if (o == null) return "";
+        o = o.trim().replace("\n", " | ");
+        return o.length() > 400 ? o.substring(0, 400) : o;
+    }
+
     /**
      * מנסה להעלות את מסך השיחה לחזית ומוודא (לפי חלון הפוקוס). חוסם (להריץ בת'רד רקע).
      * true = מסך השיחה בחזית.
@@ -92,6 +99,9 @@ final class CallScreen {
     static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
         lastInfo = "התחלה: " + w;
+        lastInfo += "\n[resumed] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'mResumedActivity|ResumedActivity' | head -3");
+        lastInfo += "\n[telecom] " + oneLine(sh, "dumpsys telecom | grep -i -E 'Call TC|mCalls|state' | head -6");
+        lastInfo += "\n[incall] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'incall' | head -4");
         if (isCallUi(w)) return true;
         List<String> cmds = new ArrayList<String>();
         // קודם מה שהמערכת עצמה מכירה כמסך שיחה (לא מקלדת חיוג)

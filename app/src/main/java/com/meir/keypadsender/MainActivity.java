@@ -125,8 +125,10 @@ public class MainActivity extends Activity {
                         final String w = (ok ? "הצלחה\n" : "לא נמצא מסך שיחה\n") + CallScreen.lastInfo;
                         runOnUiThread(new Runnable() {
                             @Override public void run() {
-                                Toast.makeText(MainActivity.this, w,
-                                        Toast.LENGTH_LONG).show();
+                                new android.app.AlertDialog.Builder(MainActivity.this)
+                                        .setMessage(w)
+                                        .setPositiveButton(android.R.string.ok, null)
+                                        .show();
                             }
                         });
                     }
