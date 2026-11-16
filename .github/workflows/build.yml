@@ -39,14 +39,20 @@ jobs:
       - name: Unit tests
         run: gradle testDebugUnitTest --no-daemon
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build release APK
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: gradle assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KeypadSender-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: KeypadSender-release
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Publish Release
         if: github.event_name != 'pull_request'
@@ -55,5 +61,5 @@ jobs:
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           APK="${REPO_NAME}-v${{ github.run_number }}.apk"
-          cp app/build/outputs/apk/debug/*.apk "$APK"
+          cp app/build/outputs/apk/release/*.apk "$APK"
           gh release create "v${{ github.run_number }}" "$APK"             --title "${REPO_NAME} v${{ github.run_number }}"             --notes "${REPO_NAME} build ${{ github.run_number }} (commit ${GITHUB_SHA::7})"             --target "$GITHUB_SHA"
