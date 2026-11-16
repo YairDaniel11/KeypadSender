@@ -64,6 +64,34 @@ public final class KeypadEncoder {
 
     /** מחזיר מחרוזת מקשים כולל # בסוף. תווים לא נתמכים מדולגים. */
     public static String encode(String text) {
+        return encodeBody(text, null) + END;
+    }
+
+    private static String cachedSpec = "";
+    private static java.util.Map<Character, int[]> cachedMap = new java.util.HashMap<Character, int[]>();
+
+    /**
+     * התאמות למפת האותיות: רשימה מופרדת ברווח/פסיק של "אות=מקש:הקשות", למשל "a=2:1 b=2:2 ש=7:1".
+     * נוספות/דורסות את ברירת המחדל. רשומות לא תקינות מדולגות.
+     */
+    static synchronized java.util.Map<Character, int[]> parseMap(String spec) {
+        String sp = spec == null ? "" : spec;
+        if (sp.equals(cachedSpec)) return cachedMap;
+        java.util.Map<Character, int[]> m = new java.util.HashMap<Character, int[]>();
+        for (String tok : sp.trim().split("[\\s,]+")) {
+            if (tok.length() != 5 || tok.charAt(1) != '=' || tok.charAt(3) != ':') continue;
+            char k = tok.charAt(2), pr = tok.charAt(4);
+            if (k < '0' || k > '9' || pr < '1' || pr > '9') continue;
+            m.put(tok.charAt(0), new int[]{k, pr - '0'});
+        }
+        cachedSpec = sp;
+        cachedMap = m;
+        return m;
+    }
+
+    /** כמו encode אבל בלי סיומת, ועם התאמות מפה (null = ברירת מחדל). */
+    public static String encodeBody(String text, String mapSpec) {
+        java.util.Map<Character, int[]> custom = parseMap(mapSpec);
         String t = normalizeText(text);
         StringBuilder out = new StringBuilder();
         char lastKey = 0;
@@ -72,8 +100,12 @@ public final class KeypadEncoder {
             char c = normalizeFinal(t.charAt(i));
             char key;
             int presses;
+            int[] cu = custom.get(t.charAt(i));
+            if (cu == null) cu = custom.get(c);
 
-            if (c == ' ') {
+            if (cu != null) {
+                key = (char) cu[0]; presses = cu[1];
+            } else if (c == ' ') {
                 key = '0'; presses = 1;
             } else if (c == '0') {
                 key = '0'; presses = 2;
@@ -91,16 +123,21 @@ public final class KeypadEncoder {
             for (int p = 0; p < presses; p++) out.append(key);
             lastKey = key;
         }
-        return out.append(END).toString();
+        return out.toString();
     }
 
     /** תווים שהמרה תדלג עליהם (ללא כפילויות), לתצוגת אזהרה. */
     public static String findUnsupported(String text) {
+        return findUnsupported(text, null);
+    }
+
+    public static String findUnsupported(String text, String mapSpec) {
+        java.util.Map<Character, int[]> custom = parseMap(mapSpec);
         String t = normalizeText(text);
         Set<Character> bad = new LinkedHashSet<Character>();
         for (int i = 0; i < t.length(); i++) {
             char c = normalizeFinal(t.charAt(i));
-            boolean ok = c == ' ' || (c >= '0' && c <= '9') || isMappedLetter(c);
+            boolean ok = custom.containsKey(t.charAt(i)) || custom.containsKey(c) || c == ' ' || (c >= '0' && c <= '9') || isMappedLetter(c);
             if (!ok) bad.add(t.charAt(i));
         }
         StringBuilder sb = new StringBuilder();

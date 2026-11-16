@@ -50,15 +50,7 @@ public class MainActivity extends Activity {
         View history = findViewById(R.id.btn_history);
         Button clear = (Button) findViewById(R.id.btn_clear);
 
-        int ext = Prefs.getExt(this);
-        ((RadioButton) findViewById(ext == 3 ? R.id.rb_ext3 : ext == 2 ? R.id.rb_ext2 : R.id.rb_ext1))
-                .setChecked(true);
-        extGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override public void onCheckedChanged(RadioGroup group, int checkedId) {
-                Prefs.setExt(MainActivity.this, selectedExt());
-                refreshStatus();
-            }
-        });
+        buildExtButtons();
 
         // שחזור הטקסט האחרון (גם אחרי שהמערכת סגרה את האפליקציה ברקע)
         String draft = Prefs.getDraft(this);
@@ -182,6 +174,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        buildExtButtons(); // ההגדרות ייתכן ששונו
         refreshStatus();
         startListening();
     }
@@ -192,16 +185,56 @@ public class MainActivity extends Activity {
         super.onPause();
     }
 
+    /** בונה את כפתורי הבחירה לפי ההגדרות (כמות, כותרות). עד 4 - בשורה; יותר - בעמודה. */
+    private void buildExtButtons() {
+        extGroup.setOnCheckedChangeListener(null);
+        extGroup.removeAllViews();
+        int count = Prefs.getExtCount(this);
+        boolean horizontal = count <= 4;
+        extGroup.setOrientation(horizontal ? RadioGroup.HORIZONTAL : RadioGroup.VERTICAL);
+        int sel = Prefs.getExt(this);
+        final int[] ids = new int[count];
+        for (int i = 1; i <= count; i++) {
+            RadioButton rb = new RadioButton(this);
+            rb.setId(i == 1 ? R.id.rb_ext1 : View.generateViewId());
+            ids[i - 1] = rb.getId();
+            rb.setText(Prefs.getExtTitle(this, i));
+            rb.setTextSize(12);
+            rb.setMinHeight((int) (40 * getResources().getDisplayMetrics().density));
+            rb.setTextColor(ThemeUtil.resolveColor(this, R.attr.colorTextPrimary));
+            RadioGroup.LayoutParams lp = horizontal
+                    ? new RadioGroup.LayoutParams(0, RadioGroup.LayoutParams.WRAP_CONTENT, 1f)
+                    : new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT,
+                            RadioGroup.LayoutParams.WRAP_CONTENT);
+            rb.setLayoutParams(lp);
+            if (horizontal || i == 1) rb.setNextFocusUpId(R.id.btn_goto_call);
+            if (horizontal || i == count) rb.setNextFocusDownId(R.id.input);
+            extGroup.addView(rb);
+            if (i == sel) rb.setChecked(true);
+        }
+        input.setNextFocusUpId(R.id.rb_ext1);
+        updatePreview(input.getText().toString());
+        extGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(RadioGroup group, int checkedId) {
+                Prefs.setExt(MainActivity.this, selectedExt());
+                updatePreview(input.getText().toString());
+                refreshStatus();
+            }
+        });
+    }
+
     private int selectedExt() {
         int id = extGroup.getCheckedRadioButtonId();
-        if (id == R.id.rb_ext2) return 2;
-        if (id == R.id.rb_ext3) return 3;
+        for (int i = 0; i < extGroup.getChildCount(); i++) {
+            if (extGroup.getChildAt(i).getId() == id) return i + 1;
+        }
         return 1;
     }
 
     private void updatePreview(String text) {
-        preview.setText(KeypadEncoder.encode(text));
-        String bad = KeypadEncoder.findUnsupported(text);
+        String map = Prefs.getLetterMap(this);
+        preview.setText(KeypadEncoder.encodeBody(text, map) + Prefs.getExtSuffix(this, selectedExt()));
+        String bad = KeypadEncoder.findUnsupported(text, map);
         warn.setText(bad.length() == 0 ? "" : getString(R.string.warn_unsupported, bad));
     }
 
@@ -235,7 +268,7 @@ public class MainActivity extends Activity {
             status.setText(R.string.status_need_permission);
             return;
         }
-        String number = Prefs.getNumber(this);
+        String number = Prefs.effectiveNumber(this, selectedExt());
         if (number.length() == 0) {
             status.setText(R.string.status_no_number);
             return;
@@ -244,14 +277,24 @@ public class MainActivity extends Activity {
             case IN_CALL_TARGET: status.setText(R.string.status_in_target); break;
             case IN_CALL_OTHER: status.setText(R.string.status_in_other); break;
             case IN_CALL_UNKNOWN: status.setText(R.string.status_in_unknown); break;
-            default: status.setText(getString(R.string.status_idle, number, selectedExt())); break;
+            default: status.setText(getString(R.string.status_idle, number,
+                    Prefs.getExtTitle(this, selectedExt()))); break;
         }
     }
 
     // ---- שליחה ----
+    /** הטקסט המקודד (לפי מפת האותיות) בלי סיומת. */
+    private String encodedText() {
+        return KeypadEncoder.encodeBody(input.getText().toString(), Prefs.getLetterMap(this));
+    }
+
+    /** מה שנשלח בפועל אחרי הרצף: הטקסט המקודד + הסיומת של הכפתור הנבחר. */
+    private String fullBody() {
+        return encodedText() + Prefs.getExtSuffix(this, selectedExt());
+    }
+
     private void trySend() {
-        String body = KeypadEncoder.encode(input.getText().toString());
-        if (body.length() <= 1) { // רק '#': אין מה לשלוח
+        if (encodedText().length() == 0) { // אין מה לשלוח
             Toast.makeText(this, R.string.toast_empty, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -262,11 +305,14 @@ public class MainActivity extends Activity {
             PermissionUtil.requestAll(this, PermissionUtil.ALL);
             return;
         }
-        doSend(body);
+        doSend();
     }
 
-    private void doSend(String body) {
-        String number = Prefs.getNumber(this);
+    private void doSend() {
+        int ext = selectedExt();
+        String number = Prefs.effectiveNumber(this, ext);
+        String body = fullBody();
+        String seq = Prefs.getExtSeq(this, ext);
         if (number.length() == 0) {
             Toast.makeText(this, R.string.toast_no_number, Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, SettingsActivity.class));
@@ -276,23 +322,24 @@ public class MainActivity extends Activity {
             case IDLE: {
                 boolean root = Prefs.useRoot(this);
                 // עם רוט: מחייגים את המספר בלבד (מחרוזת עם פסיקים נדחית בחלק מהמכשירים
-                // כ"מספר לא תקין") ואחר כך שולחים שלוחה והקשות כשהשיחה מתחברת.
+                // כ"מספר לא תקין") ואחר כך שולחים את הרצף וההקשות כשהשיחה מתחברת.
                 String dial = root
-                        ? number.replaceAll("[\\s-]", "")
-                        : Dialer.buildDialString(number, Prefs.getP1(this), Prefs.getP2(this),
-                                Prefs.getP3(this), selectedExt(), body);
+                        ? number.replaceAll("[\s-]", "")
+                        : Dialer.buildDialString(number, seq, body);
                 if (!Dialer.dial(this, dial)) {
                     Toast.makeText(this, R.string.toast_airplane, Toast.LENGTH_LONG).show();
                 } else if (root) {
-                    InCallSendService.startScripted(this,
-                            new String[]{String.valueOf(selectedExt()), "2", body},
-                            new long[]{Prefs.getP1(this) * 2000L, Prefs.getP2(this) * 2000L,
-                                    Prefs.getP3(this) * 2000L});
+                    SeqUtil.Script sc = SeqUtil.toScript(seq, body);
+                    InCallSendService.startScripted(this, sc.parts, sc.delays);
                 }
                 break;
             }
             case IN_CALL_TARGET:
-                // כבר בשיחה עם הקו: לא מחייגים ולא בוחרים שלוחה - רק הרצף
+                if (!CallTracker.activeMatches(this, number)) { // שיחה עם קו אחר מהכפתור הנבחר
+                    Toast.makeText(this, R.string.toast_other_call, Toast.LENGTH_LONG).show();
+                    break;
+                }
+                // כבר בשיחה עם הקו: לא מחייגים ולא שולחים רצף - רק הטקסט
                 InCallSendService.start(this, body);
                 break;
             case IN_CALL_OTHER:
@@ -312,7 +359,7 @@ public class MainActivity extends Activity {
         if (granted) {
             startListening();
             refreshStatus();
-            if (pendingSend) doSend(KeypadEncoder.encode(input.getText().toString()));
+            if (pendingSend) doSend();
         } else if (pendingSend) {
             Toast.makeText(this, R.string.toast_no_permission, Toast.LENGTH_LONG).show();
         }

@@ -50,84 +50,18 @@
                 android:textDirection="ltr"
                 android:textSize="18sp"
                 android:nextFocusUp="@+id/btn_save"
-                android:nextFocusDown="@+id/edit_p1" />
+                android:nextFocusDown="@+id/btn_ext_settings" />
 
-            <TextView
+            <Button
+                android:id="@+id/btn_ext_settings"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/label_p1"
-                android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
-
-            <EditText
-                android:id="@+id/edit_p1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="?attr/bgInput"
-                android:gravity="start"
-                android:inputType="number"
-                android:maxLength="2"
-                android:minHeight="44dp"
-                android:paddingEnd="16dp"
-                android:paddingStart="16dp"
-                android:singleLine="true"
+                android:layout_height="44dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/bgBtnTonal"
+                android:text="@string/btn_ext_settings"
                 android:textColor="?attr/colorTextPrimary"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:nextFocusUp="@id/edit_number"
-                android:nextFocusDown="@+id/edit_p2" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/label_p2"
-                android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
-
-            <EditText
-                android:id="@+id/edit_p2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="?attr/bgInput"
-                android:gravity="start"
-                android:inputType="number"
-                android:maxLength="2"
-                android:minHeight="44dp"
-                android:paddingEnd="16dp"
-                android:paddingStart="16dp"
-                android:singleLine="true"
-                android:textColor="?attr/colorTextPrimary"
-                android:textSize="18sp"
-                android:nextFocusUp="@id/edit_p1"
-                android:nextFocusDown="@+id/edit_p3" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/label_p3"
-                android:textColor="?attr/colorTextSecondary"
-                android:textSize="12sp" />
-
-            <EditText
-                android:id="@+id/edit_p3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="?attr/bgInput"
-                android:gravity="start"
-                android:inputType="number"
-                android:maxLength="2"
-                android:minHeight="44dp"
-                android:paddingEnd="16dp"
-                android:paddingStart="16dp"
-                android:singleLine="true"
-                android:textColor="?attr/colorTextPrimary"
-                android:textSize="18sp"
-                android:nextFocusUp="@id/edit_p2"
                 android:nextFocusDown="@+id/cb_root" />
 
             <CheckBox
@@ -141,7 +75,7 @@
                 android:text="@string/cb_root"
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="13sp"
-                android:nextFocusUp="@id/edit_p3"
+                android:nextFocusUp="@id/btn_ext_settings"
                 android:nextFocusDown="@+id/edit_gap" />
 
             <TextView
@@ -194,6 +128,32 @@
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="18sp"
                 android:nextFocusUp="@id/edit_gap"
+                android:nextFocusDown="@+id/edit_map" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/label_map"
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
+
+            <EditText
+                android:id="@+id/edit_map"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
+                android:inputType="textNoSuggestions"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
+                android:textColor="?attr/colorTextPrimary"
+                android:textDirection="ltr"
+                android:textSize="16sp"
+                android:nextFocusUp="@id/edit_batch"
                 android:nextFocusDown="@+id/edit_cmd" />
 
             <TextView
@@ -219,7 +179,7 @@
                 android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="16sp"
-                android:nextFocusUp="@id/edit_batch"
+                android:nextFocusUp="@id/edit_map"
                 android:nextFocusDown="@+id/btn_test_root" />
 
             <Button

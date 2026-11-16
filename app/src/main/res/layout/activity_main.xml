@@ -94,42 +94,6 @@
         android:orientation="horizontal"
         android:paddingEnd="4dp"
         android:paddingStart="4dp">
-
-        <RadioButton
-            android:id="@+id/rb_ext1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="40dp"
-            android:text="@string/ext1"
-            android:textColor="?attr/colorTextPrimary"
-            android:textSize="12sp"
-            android:nextFocusUp="@id/btn_goto_call"
-            android:nextFocusDown="@+id/input" />
-
-        <RadioButton
-            android:id="@+id/rb_ext2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="40dp"
-            android:text="@string/ext2"
-            android:textColor="?attr/colorTextPrimary"
-            android:textSize="12sp"
-            android:nextFocusUp="@id/btn_goto_call"
-            android:nextFocusDown="@id/input" />
-
-        <RadioButton
-            android:id="@+id/rb_ext3"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="40dp"
-            android:text="@string/ext3"
-            android:textColor="?attr/colorTextPrimary"
-            android:textSize="12sp"
-            android:nextFocusUp="@id/btn_goto_call"
-            android:nextFocusDown="@+id/input" />
     </RadioGroup>
 
     <!-- חלונית הטקסט: גדולה, עם מסגרת וסמן גלויים -->

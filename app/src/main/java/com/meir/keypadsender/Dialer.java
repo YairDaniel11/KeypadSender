@@ -10,20 +10,9 @@ import android.provider.Settings;
 public final class Dialer {
     private Dialer() {}
 
-    private static String commas(int n) {
-        StringBuilder sb = new StringBuilder();
-        int c = Math.max(0, Math.min(30, n));
-        for (int i = 0; i < c; i++) sb.append(',');
-        return sb.toString();
-    }
-
-    /**
-     * מספר + [p1 פסיקים] + שלוחה + [p2] + 2 (תת-שלוחה: הקלדה) + [p3] + ההקשות (כולל #).
-     * כל פסיק = השהיה של כ-2 שניות אחרי שהשיחה נענתה.
-     */
-    public static String buildDialString(String number, int p1, int p2, int p3, int ext, String body) {
-        String clean = number.replaceAll("[\\s-]", "");
-        return clean + commas(p1) + ext + commas(p2) + "2" + commas(p3) + body;
+    /** מספר + רצף ההקשות של הכפתור (כולל פסיקים) + הגוף (הטקסט המקודד + סיומת). */
+    public static String buildDialString(String number, String seq, String body) {
+        return number.replaceAll("[\\s-]", "") + SeqUtil.sanitize(seq) + body;
     }
 
     /** false = מצב טיסה, לא מחייגים. דורש CALL_PHONE. */

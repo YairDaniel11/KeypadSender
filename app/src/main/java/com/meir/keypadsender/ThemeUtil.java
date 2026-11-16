@@ -11,6 +11,13 @@ public final class ThemeUtil {
         activity.setTheme(isDark(activity) ? R.style.AppTheme_Dark : R.style.AppTheme_Light);
     }
 
+    /** צבע לפי attr של הערכה הנוכחית. */
+    public static int resolveColor(android.content.Context c, int attr) {
+        android.util.TypedValue tv = new android.util.TypedValue();
+        c.getTheme().resolveAttribute(attr, tv, true);
+        return tv.data;
+    }
+
     private static boolean isDark(Activity activity) {
         int night = activity.getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK;

@@ -63,7 +63,20 @@ public final class CallTracker {
         }
         String active = Prefs.raw(ctx).getString(K_ACTIVE, "");
         if (active.length() == 0) return Status.IN_CALL_UNKNOWN;
-        return PhoneNumberUtil.same(active, Prefs.getNumber(ctx))
-                ? Status.IN_CALL_TARGET : Status.IN_CALL_OTHER;
+        return isAnyConfigured(ctx, active) ? Status.IN_CALL_TARGET : Status.IN_CALL_OTHER;
+    }
+
+    private static boolean isAnyConfigured(Context ctx, String active) {
+        if (PhoneNumberUtil.same(active, Prefs.getNumber(ctx))) return true;
+        for (int i = 1; i <= Prefs.getExtCount(ctx); i++) {
+            String n = Prefs.getExtNumber(ctx, i);
+            if (n.length() > 0 && PhoneNumberUtil.same(active, n)) return true;
+        }
+        return false;
+    }
+
+    /** האם השיחה הפעילה היא עם המספר הנתון (הכפתור הנבחר). */
+    public static boolean activeMatches(Context ctx, String number) {
+        return PhoneNumberUtil.same(Prefs.raw(ctx).getString(K_ACTIVE, ""), number);
     }
 }

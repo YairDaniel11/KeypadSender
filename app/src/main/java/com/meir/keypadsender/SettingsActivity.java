@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
 
-    private EditText number, p1, p2, p3, gap, cmd, batch;
+    private EditText number, gap, cmd, batch, map;
     private CheckBox root;
 
     @Override
@@ -20,17 +20,13 @@ public class SettingsActivity extends Activity {
         setContentView(R.layout.activity_settings);
 
         number = (EditText) findViewById(R.id.edit_number);
-        p1 = (EditText) findViewById(R.id.edit_p1);
-        p2 = (EditText) findViewById(R.id.edit_p2);
-        p3 = (EditText) findViewById(R.id.edit_p3);
         gap = (EditText) findViewById(R.id.edit_gap);
         cmd = (EditText) findViewById(R.id.edit_cmd);
+        map = (EditText) findViewById(R.id.edit_map);
+        map.setText(Prefs.getLetterMap(this));
         root = (CheckBox) findViewById(R.id.cb_root);
 
         number.setText(Prefs.getNumber(this));
-        p1.setText(String.valueOf(Prefs.getP1(this)));
-        p2.setText(String.valueOf(Prefs.getP2(this)));
-        p3.setText(String.valueOf(Prefs.getP3(this)));
         gap.setText(String.valueOf(Prefs.getGapMs(this)));
         batch = (EditText) findViewById(R.id.edit_batch);
         batch.setText(String.valueOf(Prefs.getBatch(this)));
@@ -42,6 +38,11 @@ public class SettingsActivity extends Activity {
 
         findViewById(R.id.btn_save).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { save(); }
+        });
+        findViewById(R.id.btn_ext_settings).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivity(new android.content.Intent(SettingsActivity.this, ExtSettingsActivity.class));
+            }
         });
         findViewById(R.id.btn_test_root).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { testRoot(); }
@@ -63,10 +64,10 @@ public class SettingsActivity extends Activity {
     private void save() {
         Prefs.saveSettings(this,
                 number.getText().toString().trim(),
-                num(p1, Prefs.DEFAULT_P1), num(p2, Prefs.DEFAULT_P2), num(p3, Prefs.DEFAULT_P3),
                 root.isChecked(),
                 num(gap, Prefs.DEFAULT_GAP_MS),
                 cmd.getText().toString().trim());
+        Prefs.setLetterMap(this, map.getText().toString().trim());
         Prefs.setBatch(this, num(batch, Prefs.DEFAULT_BATCH));
         Toast.makeText(this, R.string.toast_saved, Toast.LENGTH_SHORT).show();
         finish();

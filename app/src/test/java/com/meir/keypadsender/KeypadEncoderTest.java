@@ -1,5 +1,6 @@
 package com.meir.keypadsender;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -51,7 +52,28 @@ public class KeypadEncoderTest {
 
     @Test public void dialString() {
         assertEquals("0771234567,,,1,,2,,7755#",
-                Dialer.buildDialString("077-123 4567", 3, 2, 2, 1, "7755#"));
+                Dialer.buildDialString("077-123 4567", SeqUtil.defaultSeq(3, 1, 2, 2, 2), "7755#"));
+    }
+
+    @Test public void seqSanitize() {
+        assertEquals(",1,*#", SeqUtil.sanitize(" ,1 a,*#x"));
+    }
+
+    @Test public void seqScriptWithWaits() {
+        SeqUtil.Script sc = SeqUtil.toScript(",,1,2,", "77#");
+        assertArrayEquals(new String[]{"1", "2", "77#"}, sc.parts);
+        assertArrayEquals(new long[]{4000, 2000, 2000}, sc.delays);
+    }
+
+    @Test public void seqScriptMergesWhenNoWaitBeforeBody() {
+        SeqUtil.Script sc = SeqUtil.toScript("12", "77#");
+        assertArrayEquals(new String[]{"1277#"}, sc.parts);
+    }
+
+    @Test public void customMapAndBody() {
+        assertEquals("22", KeypadEncoder.encodeBody("b", "b=2:2"));
+        assertEquals("", KeypadEncoder.findUnsupported("b", "b=2:2"));
+        assertEquals("7#", KeypadEncoder.encodeBody("ר", null) + "#");
     }
 
     @Test public void phoneNumbers() {

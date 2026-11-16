@@ -22,7 +22,7 @@
 
     <string name="status_need_permission">חסרות הרשאות – ייבקשו בשליחה</string>
     <string name="status_no_number">לא הוגדר מספר קו – יש להיכנס להגדרות</string>
-    <string name="status_idle">לא בשיחה: יחויג %1$s ותישלח שלוחה %2$d</string>
+    <string name="status_idle">לא בשיחה: יחויג %1$s ותישלח %2$s</string>
     <string name="status_in_target">בשיחה עם הקו: יישלח רצף ההקשות בלבד</string>
     <string name="status_in_other">בשיחה עם מספר אחר: לא תתבצע שליחה</string>
     <string name="status_in_unknown">בשיחה עם מספר לא מזוהה: לא תתבצע שליחה</string>
@@ -43,6 +43,21 @@
     <string name="no">לא</string>
     <string name="label_cmd">פקודת רוט לחזרה למסך השיחה (ריק = בלי)</string>
     <string name="btn_test_root">בדיקת רוט</string>
+    <string name="btn_ext_settings">הגדרת כפתורי השלוחות</string>
+    <string name="title_ext_settings">כפתורי שלוחות</string>
+    <string name="label_ext_count">כמה כפתורים להציג (1-9)</string>
+    <string name="label_ext_row">כפתור %1$d</string>
+    <string name="hint_ext_label">כותרת (ריק = בלי)</string>
+    <string name="ext_help">לכל כפתור: כותרת, מספר קו (ריק = המספר הכללי), רצף שלפני הטקסט וסיומת שאחריו. ברצף ובסיומת: ספרות, * ו-# הם מקשים, ופסיק = המתנה של כ-2 שניות. דוגמה לרצף: ,,,1,,2,, (3 המתנות, מקש 1, 2 המתנות, מקש 2, 2 המתנות).</string>
+    <string name="hint_ext_number">מספר קו (ריק = הכללי)</string>
+    <string name="hint_ext_seq">רצף לפני הטקסט, למשל ,,,1,,2,,</string>
+    <string name="hint_ext_suffix">סיומת אחרי הטקסט (ברירת מחדל #)</string>
+    <string name="btn_export">ייצוא ההגדרות ללוח</string>
+    <string name="btn_import">ייבוא הגדרות מהלוח</string>
+    <string name="toast_exported">ההגדרות הועתקו ללוח</string>
+    <string name="toast_imported">ההגדרות יובאו</string>
+    <string name="toast_import_bad">בלוח אין הגדרות תקינות</string>
+    <string name="label_map">התאמות למפת האותיות (אופציונלי): אות=מקש:הקשות, מופרדים ברווח. למשל a=2:1 b=2:2</string>
     <string name="btn_save">שמור</string>
 
     <string name="toast_saved">נשמר</string>
