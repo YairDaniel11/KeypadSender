@@ -154,8 +154,6 @@ final class CallScreen {
     static boolean bringToFront(Context ctx, RootShell sh) throws Exception {
         String w = focusedWindow(sh);
         lastInfo = "התחלה: " + w;
-        lastInfo += "\n[tasks] " + taskDump(ctx);
-        lastInfo += "\n[incall] " + oneLine(sh, "dumpsys activity activities | grep -i -E 'incall'");
         if (isCallUi(w)) return true;
         // הכי אמין: להעביר את המשימה של מסך השיחה לחזית (בלי intent שמסך השיחה עלול לסגור)
         if (moveCallTaskToFront(ctx)) {

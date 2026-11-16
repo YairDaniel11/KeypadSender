@@ -38,6 +38,7 @@
     <string name="btn_goto_call">לשיחה הפעילה</string>
     <string name="toast_no_active_call">אין שיחה פעילה</string>
     <string name="confirm_clear_history">למחוק את כל ההיסטוריה?</string>
+    <string name="toast_call_screen_not_found">לא נמצא מסך שיחה</string>
     <string name="yes">כן</string>
     <string name="no">לא</string>
     <string name="label_cmd">פקודת רוט לחזרה למסך השיחה (ריק = בלי)</string>

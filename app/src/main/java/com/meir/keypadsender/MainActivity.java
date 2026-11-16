@@ -123,26 +123,11 @@ public class MainActivity extends Activity {
                 RootShell sh = RootShell.open();
                 if (sh == null) { CallScreen.showViaTelecom(app); return; }
                 try {
-                    boolean ok = CallScreen.bringToFront(app, sh);
-                    {
-                        final String w = (ok ? "הצלחה\n" : "לא נמצא מסך שיחה\n") + CallScreen.lastInfo;
-                        final String saved = saveLog(app, sh, w);
+                    if (!CallScreen.bringToFront(app, sh)) {
                         runOnUiThread(new Runnable() {
                             @Override public void run() {
-                                android.widget.ScrollView sv = new android.widget.ScrollView(MainActivity.this);
-                                TextView tv = new TextView(MainActivity.this);
-                                tv.setText(w);
-                                tv.setTextSize(9);
-                                tv.setPadding(8, 8, 8, 8);
-                                tv.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-                                tv.setFocusable(true);
-                                sv.addView(tv);
-                                sv.setFocusable(true);
-                                new android.app.AlertDialog.Builder(MainActivity.this)
-                                        .setTitle(saved)
-                                        .setView(sv)
-                                        .setPositiveButton(android.R.string.ok, null)
-                                        .show();
+                                Toast.makeText(MainActivity.this, R.string.toast_call_screen_not_found,
+                                        Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -152,22 +137,6 @@ public class MainActivity extends Activity {
                 }
             }
         }, "goto-call").start();
-    }
-
-    /** שומר את הלוג בקובץ בזיכרון הפנימי (Download), דרך רוט. מחזיר הודעה על המיקום. */
-    private static String saveLog(Context app, RootShell sh, String text) {
-        try {
-            java.io.File f = new java.io.File(app.getCacheDir(), "keypadsender-log.txt");
-            java.io.FileOutputStream o = new java.io.FileOutputStream(f);
-            o.write(text.getBytes("UTF-8"));
-            o.close();
-            f.setReadable(true, false);
-            String dest = "/sdcard/Download/keypadsender-log.txt";
-            sh.run("mkdir -p /sdcard/Download; cp '" + f.getAbsolutePath() + "' " + dest);
-            return "נשמר: " + dest;
-        } catch (Exception e) {
-            return "שמירת לוג נכשלה";
-        }
     }
 
     /** חזור במסך הראשי = יציאה מהאפליקציה (למסך הבית), לא חזרה למסך קודם. */
