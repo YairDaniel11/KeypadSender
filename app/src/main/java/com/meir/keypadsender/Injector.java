@@ -35,13 +35,19 @@ public final class Injector {
 
             BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
             String line;
+            int last = -1;
             while ((line = r.readLine()) != null) {
                 String[] t = line.trim().split("\\s+");
                 if (t.length == 0 || t[0].length() == 0) continue;
                 boolean ok = true;
-                long gap = Math.max(MIN_GAP_MS, Long.parseLong(t[0]));
+                // "gap" או "gap:extra" - extra = המתנה נוספת לפני מקש זהה לקודם (הקשות חוזרות על אותו מקש)
+                String[] g = t[0].split(":");
+                long gap = Math.max(MIN_GAP_MS, Long.parseLong(g[0]));
+                long extra = g.length > 1 ? Math.max(0, Long.parseLong(g[1])) : 0;
                 for (int i = 1; i < t.length; i++) {
                     int code = Integer.parseInt(t[i]);
+                    if (code == last && extra > 0) Thread.sleep(extra);
+                    last = code;
                     long now = SystemClock.uptimeMillis();
                     ok &= send(im, inject, new KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, 0, -1, 0,
                             0, InputDevice.SOURCE_KEYBOARD));

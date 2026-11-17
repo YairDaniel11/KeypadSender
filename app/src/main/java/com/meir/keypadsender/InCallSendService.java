@@ -243,6 +243,7 @@ public class InCallSendService extends Service {
             if (!ensureCallUi(ctx, sh)) return false;
             if (wait && !waitAnswered(ctx, sh)) return false;
             int gap = Math.max(0, Prefs.getGapMs(ctx));
+            int same = Prefs.getSameKeyGapMs(ctx);
             int batch = Math.max(1, Prefs.getBatch(ctx));
             // תהליך root קבוע שמזריק מקשים מהר ובלי לחיצה "ארוכה"; אם לא עלה - input keyevent
             inj = InjectorClient.open(ctx);
@@ -277,7 +278,7 @@ public class InCallSendService extends Service {
                     if ((first || special) && !ensureCallUi(ctx, sh)) return false;
                     first = false;
                     if (inj != null) {
-                        if (!inj.send(gap, codes)) return false;
+                        if (!inj.send(gap, same, codes)) return false;
                     } else {
                         StringBuilder cmd = new StringBuilder();
                         for (int code : codes) {
@@ -303,6 +304,8 @@ public class InCallSendService extends Service {
         ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_DTMF, 100);
         try {
             int gap = Math.max(0, Prefs.getGapMs(ctx));
+            int same = Prefs.getSameKeyGapMs(ctx);
+            char prev = 0;
             for (int i = 0; i < digits.length(); i++) {
                 char c = digits.charAt(i);
                 int tone;
@@ -311,6 +314,8 @@ public class InCallSendService extends Service {
                 else if (c == '*') tone = ToneGenerator.TONE_DTMF_S;
                 else continue;
                 if (!inCall(ctx)) { aborted = true; return false; }
+                if (c == prev && same > 0) Thread.sleep(same);
+                prev = c;
                 tg.startTone(tone, TONE_MS);
                 Thread.sleep(TONE_MS + gap);
             }

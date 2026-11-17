@@ -106,6 +106,9 @@ public final class Prefs {
     public static void setGapMs(Context c, int ms) { raw(c).edit().putInt(K_GAP, Math.max(0, ms)).apply(); }
     public static boolean useRoot(Context c) { return raw(c).getBoolean(K_ROOT, false); }
     public static int getGapMs(Context c) { return raw(c).getInt(K_GAP, DEFAULT_GAP_MS); }
+    /** המתנה נוספת (מ"ש) לפני הקשה על אותו מקש כמו הקודמת; 0 = בלי. */
+    public static int getSameKeyGapMs(Context c) { return Math.max(0, raw(c).getInt("same_gap", 0)); }
+    public static void setSameKeyGapMs(Context c, int ms) { raw(c).edit().putInt("same_gap", Math.max(0, ms)).apply(); }
     public static final int DEFAULT_BATCH = 5;
     public static int getBatch(Context c) { return raw(c).getInt("batch", DEFAULT_BATCH); }
     public static void setBatch(Context c, int n) { raw(c).edit().putInt("batch", Math.max(1, n)).apply(); }

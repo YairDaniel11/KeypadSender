@@ -116,6 +116,39 @@
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="18sp"
                 android:nextFocusUp="@id/cb_root"
+                android:nextFocusDown="@+id/edit_same_gap" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/note_same_gap"
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_same_gap"
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="15sp" />
+
+            <EditText
+                android:id="@+id/edit_same_gap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/bgInput"
+                android:gravity="start"
+                android:inputType="number"
+                android:maxLength="5"
+                android:minHeight="44dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:singleLine="true"
+                android:textColor="?attr/colorTextPrimary"
+                android:textSize="18sp"
+                android:nextFocusUp="@id/edit_gap"
                 android:nextFocusDown="@+id/edit_batch" />
 
             <TextView
@@ -141,7 +174,7 @@
                 android:singleLine="true"
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="18sp"
-                android:nextFocusUp="@id/edit_gap"
+                android:nextFocusUp="@id/edit_same_gap"
                 android:nextFocusDown="@+id/edit_map" />
 
             <TextView

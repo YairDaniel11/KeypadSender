@@ -41,6 +41,8 @@
     <string name="ad_confirm_cancel">ביטול (השיחה נשארת)</string>
     <string name="toast_ad_cancelled">השליחה בוטלה, השיחה נשארה פתוחה</string>
     <string name="label_gap">מרווח בין הקשות (מילישניות, ברירת מחדל 250)</string>
+    <string name="label_same_gap">המתנה נוספת בין הקשות על אותו מקש (מילישניות, 0 = בלי)</string>
+    <string name="note_same_gap">לפעמים יש בעיה בפענוח כשמקישים מהר על אותו מקש. הגדלה מאטה רק הקשות כאלה, למשל בספרות.</string>
     <string name="label_batch">מהירות: כמה מקשים בכל פקודה (גבוה = מהיר יותר; 1 = מקש-מקש. אם נשלח רק המקש הראשון בכל קבוצה – הורד ל-1)</string>
     <string name="btn_goto_call">לשיחה הפעילה</string>
     <string name="toast_no_active_call">אין שיחה פעילה</string>

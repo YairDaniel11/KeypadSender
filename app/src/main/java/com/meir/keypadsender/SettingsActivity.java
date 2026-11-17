@@ -10,7 +10,7 @@ import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
 
-    private EditText number, gap, cmd, batch, map;
+    private EditText number, gap, same, cmd, batch, map;
     private CheckBox root, ads;
 
     @Override
@@ -28,6 +28,8 @@ public class SettingsActivity extends Activity {
 
         number.setText(Prefs.getNumber(this));
         gap.setText(String.valueOf(Prefs.getGapMs(this)));
+        same = (EditText) findViewById(R.id.edit_same_gap);
+        same.setText(String.valueOf(Prefs.getSameKeyGapMs(this)));
         batch = (EditText) findViewById(R.id.edit_batch);
         batch.setText(String.valueOf(Prefs.getBatch(this)));
         cmd.setText(Prefs.getInCallCmd(this));
@@ -74,6 +76,7 @@ public class SettingsActivity extends Activity {
                 root.isChecked(),
                 num(gap, Prefs.DEFAULT_GAP_MS),
                 cmd.getText().toString().trim());
+        Prefs.setSameKeyGapMs(this, num(same, 0));
         Prefs.setAdsLine(this, ads.isChecked());
         Prefs.setLetterMap(this, map.getText().toString().trim());
         Prefs.setBatch(this, num(batch, Prefs.DEFAULT_BATCH));

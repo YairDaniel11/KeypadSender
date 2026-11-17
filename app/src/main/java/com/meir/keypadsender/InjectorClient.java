@@ -58,13 +58,14 @@ final class InjectorClient {
     }
 
     /** שולח מקשים (קודים) עם מרווח ביניהם; true = הוזרקו. חוסם עד סיום. */
-    boolean send(int gapMs, int[] codes) {
+    boolean send(int gapMs, int sameKeyExtraMs, int[] codes) {
         try {
             StringBuilder sb = new StringBuilder().append(gapMs);
+            if (sameKeyExtraMs > 0) sb.append(':').append(sameKeyExtraMs);
             for (int c : codes) sb.append(' ').append(c);
             out.write(sb.append('\n').toString());
             out.flush();
-            long wait = 10000L + (long) codes.length * (gapMs + 100);
+            long wait = 10000L + (long) codes.length * (gapMs + sameKeyExtraMs + 100);
             String l = lines.poll(wait, TimeUnit.MILLISECONDS);
             return "OK".equals(l);
         } catch (Exception e) {
