@@ -13,10 +13,9 @@ import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -30,7 +29,8 @@ public class MainActivity extends Activity {
     private TextView warn;
     private TextView status;
     private RadioGroup extGroup;
-    private Spinner extSpinner;
+    private Button extPicker;
+    private int extSel = 0;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refreshRunnable = new Runnable() {
@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
         warn = (TextView) findViewById(R.id.warn);
         status = (TextView) findViewById(R.id.status);
         extGroup = (RadioGroup) findViewById(R.id.ext_group);
-        extSpinner = (Spinner) findViewById(R.id.ext_spinner);
+        extPicker = (Button) findViewById(R.id.ext_spinner);
         Button send = (Button) findViewById(R.id.btn_send);
         View settings = findViewById(R.id.btn_settings);
         View history = findViewById(R.id.btn_history);
@@ -200,14 +200,14 @@ public class MainActivity extends Activity {
         View gotoCall = findViewById(R.id.btn_goto_call);
         if (!horizontal) {
             extGroup.setVisibility(View.GONE);
-            extSpinner.setVisibility(View.VISIBLE);
+            extPicker.setVisibility(View.VISIBLE);
             buildExtSpinner(count);
             gotoCall.setNextFocusDownId(R.id.ext_spinner);
             input.setNextFocusUpId(R.id.ext_spinner);
             updatePreview(input.getText().toString());
             return;
         }
-        extSpinner.setVisibility(View.GONE);
+        extPicker.setVisibility(View.GONE);
         extGroup.setVisibility(View.VISIBLE);
         gotoCall.setNextFocusDownId(R.id.rb_ext1);
         extGroup.setOrientation(RadioGroup.HORIZONTAL);
@@ -242,39 +242,75 @@ public class MainActivity extends Activity {
         });
     }
 
-    /** יותר מ-4 שלוחות: רשימה נפתחת בשורה אחת במקום עמודת כפתורים שתופסת את המסך. */
-    private void buildExtSpinner(int count) {
-        final int textColor = ThemeUtil.resolveColor(this, R.attr.colorTextPrimary);
-        String[] titles = new String[count];
-        for (int i = 1; i <= count; i++) titles[i - 1] = i + " · " + Prefs.getExtTitle(this, i);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, titles) {
-            @Override public View getView(int pos, View v, ViewGroup parent) {
-                View r = super.getView(pos, v, parent);
-                if (r instanceof TextView) {
-                    ((TextView) r).setTextColor(textColor);
-                    ((TextView) r).setTextSize(14);
-                }
-                return r;
-            }
-        };
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        extSpinner.setOnItemSelectedListener(null);
-        extSpinner.setAdapter(adapter);
-        int sel = Prefs.getExt(this);
-        extSpinner.setSelection(sel >= 1 && sel <= count ? sel - 1 : 0, false);
-        extSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                Prefs.setExt(MainActivity.this, selectedExt());
-                updatePreview(input.getText().toString());
-                refreshStatus();
-            }
-            @Override public void onNothingSelected(AdapterView<?> p) { }
+    /** יותר מ-4 שלוחות: כפתור אחד בשורה שפותח חלון בחירה בעיצוב האפליקציה. */
+    private void buildExtSpinner(final int count) {
+        if (extSel < 1 || extSel > count) extSel = Math.min(Math.max(Prefs.getExt(this), 1), count);
+        updateExtButton();
+        extPicker.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { showExtDialog(count); }
         });
     }
 
+    private void updateExtButton() {
+        extPicker.setText(getString(R.string.label_ext) + " " + extSel + " · "
+                + Prefs.getExtTitle(this, extSel) + "  ▾");
+    }
+
+    private int themeRes(int attr) {
+        android.util.TypedValue tv = new android.util.TypedValue();
+        getTheme().resolveAttribute(attr, tv, true);
+        return tv.resourceId;
+    }
+
+    private void showExtDialog(int count) {
+        final android.app.Dialog dlg = new android.app.Dialog(this);
+        dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        float d = getResources().getDisplayMetrics().density;
+        int pad = (int) (6 * d);
+        ScrollView sv = new ScrollView(this);
+        sv.setBackgroundColor(ThemeUtil.resolveColor(this, R.attr.colorBgMain));
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, pad, pad, pad);
+        sv.addView(box);
+        Button selected = null;
+        for (int i = 1; i <= count; i++) {
+            final int n = i;
+            Button b = new Button(this);
+            b.setBackgroundResource(themeRes(i == extSel ? R.attr.bgBtnFilled : R.attr.bgBtnTonal));
+            b.setTextColor(ThemeUtil.resolveColor(this,
+                    i == extSel ? R.attr.colorOnAccent : R.attr.colorTextPrimary));
+            b.setText(n + " · " + Prefs.getExtTitle(this, n));
+            b.setTextSize(15);
+            b.setMinHeight(0);
+            b.setMinimumHeight((int) (40 * d));
+            b.setAllCaps(false);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(0, pad / 2, 0, pad / 2);
+            b.setLayoutParams(lp);
+            b.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) {
+                    extSel = n;
+                    Prefs.setExt(MainActivity.this, n);
+                    updateExtButton();
+                    updatePreview(input.getText().toString());
+                    refreshStatus();
+                    dlg.dismiss();
+                }
+            });
+            box.addView(b);
+            if (i == extSel) selected = b;
+        }
+        dlg.setContentView(sv);
+        dlg.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        dlg.show();
+        if (selected != null) selected.requestFocus();
+    }
+
     private int selectedExt() {
-        if (extSpinner.getVisibility() == View.VISIBLE) return extSpinner.getSelectedItemPosition() + 1;
+        if (extPicker.getVisibility() == View.VISIBLE) return extSel;
         int id = extGroup.getCheckedRadioButtonId();
         for (int i = 0; i < extGroup.getChildCount(); i++) {
             if (extGroup.getChildAt(i).getId() == id) return i + 1;
