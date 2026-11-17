@@ -96,6 +96,19 @@
         android:paddingStart="4dp">
     </RadioGroup>
 
+    <!-- בחירת שלוחה כשיש יותר מ-4: רשימה נפתחת בשורה אחת (חוסך מקום למסך) -->
+    <Spinner
+        android:id="@+id/ext_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="4dp"
+        android:background="?attr/bgCard"
+        android:visibility="gone"
+        android:nextFocusUp="@id/btn_goto_call"
+        android:nextFocusDown="@+id/input" />
+
     <!-- חלונית הטקסט: גדולה, עם מסגרת וסמן גלויים -->
     <EditText
         android:id="@+id/input"

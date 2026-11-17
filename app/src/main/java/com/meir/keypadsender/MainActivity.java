@@ -12,7 +12,11 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -26,6 +30,7 @@ public class MainActivity extends Activity {
     private TextView warn;
     private TextView status;
     private RadioGroup extGroup;
+    private Spinner extSpinner;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refreshRunnable = new Runnable() {
@@ -45,6 +50,7 @@ public class MainActivity extends Activity {
         warn = (TextView) findViewById(R.id.warn);
         status = (TextView) findViewById(R.id.status);
         extGroup = (RadioGroup) findViewById(R.id.ext_group);
+        extSpinner = (Spinner) findViewById(R.id.ext_spinner);
         Button send = (Button) findViewById(R.id.btn_send);
         View settings = findViewById(R.id.btn_settings);
         View history = findViewById(R.id.btn_history);
@@ -191,7 +197,20 @@ public class MainActivity extends Activity {
         extGroup.removeAllViews();
         int count = Prefs.getExtCount(this);
         boolean horizontal = count <= 4;
-        extGroup.setOrientation(horizontal ? RadioGroup.HORIZONTAL : RadioGroup.VERTICAL);
+        View gotoCall = findViewById(R.id.btn_goto_call);
+        if (!horizontal) {
+            extGroup.setVisibility(View.GONE);
+            extSpinner.setVisibility(View.VISIBLE);
+            buildExtSpinner(count);
+            gotoCall.setNextFocusDownId(R.id.ext_spinner);
+            input.setNextFocusUpId(R.id.ext_spinner);
+            updatePreview(input.getText().toString());
+            return;
+        }
+        extSpinner.setVisibility(View.GONE);
+        extGroup.setVisibility(View.VISIBLE);
+        gotoCall.setNextFocusDownId(R.id.rb_ext1);
+        extGroup.setOrientation(RadioGroup.HORIZONTAL);
         int sel = Prefs.getExt(this);
         final int[] ids = new int[count];
         for (int i = 1; i <= count; i++) {
@@ -223,7 +242,39 @@ public class MainActivity extends Activity {
         });
     }
 
+    /** יותר מ-4 שלוחות: רשימה נפתחת בשורה אחת במקום עמודת כפתורים שתופסת את המסך. */
+    private void buildExtSpinner(int count) {
+        final int textColor = ThemeUtil.resolveColor(this, R.attr.colorTextPrimary);
+        String[] titles = new String[count];
+        for (int i = 1; i <= count; i++) titles[i - 1] = i + " · " + Prefs.getExtTitle(this, i);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, titles) {
+            @Override public View getView(int pos, View v, ViewGroup parent) {
+                View r = super.getView(pos, v, parent);
+                if (r instanceof TextView) {
+                    ((TextView) r).setTextColor(textColor);
+                    ((TextView) r).setTextSize(14);
+                }
+                return r;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        extSpinner.setOnItemSelectedListener(null);
+        extSpinner.setAdapter(adapter);
+        int sel = Prefs.getExt(this);
+        extSpinner.setSelection(sel >= 1 && sel <= count ? sel - 1 : 0, false);
+        extSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                Prefs.setExt(MainActivity.this, selectedExt());
+                updatePreview(input.getText().toString());
+                refreshStatus();
+            }
+            @Override public void onNothingSelected(AdapterView<?> p) { }
+        });
+    }
+
     private int selectedExt() {
+        if (extSpinner.getVisibility() == View.VISIBLE) return extSpinner.getSelectedItemPosition() + 1;
         int id = extGroup.getCheckedRadioButtonId();
         for (int i = 0; i < extGroup.getChildCount(); i++) {
             if (extGroup.getChildAt(i).getId() == id) return i + 1;
