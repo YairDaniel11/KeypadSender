@@ -153,6 +153,10 @@ public final class Prefs {
 
     public static void clearHistory(Context c) { raw(c).edit().remove(K_HIST).apply(); }
 
+    /** "קו עם פרסומות": מחייגים ושולחים רק את השלוחה, והשאר אחרי אישור. */
+    public static boolean isAdsLine(Context c) { return raw(c).getBoolean("ads_line", false); }
+    public static void setAdsLine(Context c, boolean on) { raw(c).edit().putBoolean("ads_line", on).apply(); }
+
     public static void setExt(Context c, int ext) { raw(c).edit().putInt(K_EXT, ext).apply(); }
 
     public static void saveSettings(Context c, String number,

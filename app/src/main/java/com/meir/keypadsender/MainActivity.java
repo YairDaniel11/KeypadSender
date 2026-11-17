@@ -408,6 +408,9 @@ public class MainActivity extends Activity {
         switch (CallTracker.status(this)) {
             case IDLE: {
                 boolean root = Prefs.useRoot(this);
+                if (!root && Prefs.isAdsLine(this)) {
+                    Toast.makeText(this, R.string.toast_ads_need_root, Toast.LENGTH_LONG).show();
+                }
                 // עם רוט: מחייגים את המספר בלבד (מחרוזת עם פסיקים נדחית בחלק מהמכשירים
                 // כ"מספר לא תקין") ואחר כך שולחים את הרצף וההקשות כשהשיחה מתחברת.
                 String dial = root
@@ -416,8 +419,10 @@ public class MainActivity extends Activity {
                 if (!Dialer.dial(this, dial)) {
                     Toast.makeText(this, R.string.toast_airplane, Toast.LENGTH_LONG).show();
                 } else if (root) {
-                    SeqUtil.Script sc = SeqUtil.toScript(seq, body);
-                    InCallSendService.startScripted(this, sc.parts, sc.delays);
+                    SeqUtil.Script sc = null;
+                    if (Prefs.isAdsLine(this)) sc = SeqUtil.toAdsScript(seq, body);
+                    if (sc == null) sc = SeqUtil.toScript(seq, body);
+                    InCallSendService.startScripted(this, sc.parts, sc.delays, sc.confirmAfter);
                 }
                 break;
             }

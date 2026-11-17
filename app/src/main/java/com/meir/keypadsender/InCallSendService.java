@@ -28,6 +28,8 @@ public class InCallSendService extends Service {
     private static final String EXTRA_PARTS = "parts";
     private static final String EXTRA_DELAYS = "delays";
     private static final String EXTRA_WAIT = "wait";
+    private static final String EXTRA_CONFIRM = "confirm";
+    private static final int CONFIRM_WAIT_MS = 600000; // המתנה מקסימלית לאישור (10 דקות)
     private static final int WAIT_CALL_MS = 40000;   // המתנה מקסימלית להתחלת השיחה
     private static final int WAIT_ANSWER_MS = 45000; // המתנה מקסימלית למענה
     private static final int SWITCH_DELAY_MS = 1200; // המתנה אחרי חזרה למסך השיחה
@@ -36,6 +38,7 @@ public class InCallSendService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
     private volatile boolean aborted;      // השיחה הסתיימה באמצע השליחה
     private volatile String notFrontInfo;  // לא נמצא מסך שיחה בחזית (מה כן היה בחזית)
+    private volatile boolean cancelled;    // המשתמש ביטל באישור "קו עם פרסומות"
 
     public static void start(Context ctx, String digits) {
         Intent i = new Intent(ctx, InCallSendService.class);
@@ -48,10 +51,16 @@ public class InCallSendService extends Service {
      * אחרי ההשהיה שלו במילישניות. דורש רוט.
      */
     public static void startScripted(Context ctx, String[] parts, long[] delaysMs) {
+        startScripted(ctx, parts, delaysMs, 0);
+    }
+
+    /** confirmAfter > 0 (קו עם פרסומות): אחרי כמה חלקים לעצור ולבקש אישור מהמשתמש. */
+    public static void startScripted(Context ctx, String[] parts, long[] delaysMs, int confirmAfter) {
         Intent i = new Intent(ctx, InCallSendService.class);
         i.putExtra(EXTRA_PARTS, parts);
         i.putExtra(EXTRA_DELAYS, delaysMs);
         i.putExtra(EXTRA_WAIT, true);
+        i.putExtra(EXTRA_CONFIRM, confirmAfter);
         ctx.startService(i);
     }
 
@@ -76,6 +85,7 @@ public class InCallSendService extends Service {
         final String[] parts = p;
         final long[] delays = dl;
         final boolean wait = intent.getBooleanExtra(EXTRA_WAIT, false);
+        final int confirmAfter = Math.max(0, intent.getIntExtra(EXTRA_CONFIRM, 0));
         final Context app = getApplicationContext();
         new Thread(new Runnable() {
             @Override public void run() {
@@ -83,7 +93,7 @@ public class InCallSendService extends Service {
                 PowerManager.WakeLock wl = null;
                 if (pm != null) {
                     wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "KeypadSender::InCall");
-                    wl.acquire(180000);
+                    wl.acquire(confirmAfter > 0 ? 180000 + CONFIRM_WAIT_MS : 180000);
                 }
                 boolean ok = false;
                 try {
@@ -92,7 +102,7 @@ public class InCallSendService extends Service {
                         return;
                     }
                     if (Prefs.useRoot(app)) {
-                        ok = sendRoot(app, parts, delays, wait);
+                        ok = sendRoot(app, parts, delays, wait, confirmAfter);
                     } else {
                         StringBuilder all = new StringBuilder();
                         for (String part : parts) all.append(part);
@@ -104,6 +114,7 @@ public class InCallSendService extends Service {
                     stopSelf(startId);
                 }
                 if (ok) toast(app.getString(R.string.toast_sent));
+                else if (cancelled) toast(app.getString(R.string.toast_ad_cancelled));
                 else if (notFrontInfo != null) {
                     toast(app.getString(R.string.toast_not_front, notFrontInfo));
                 } else toast(app.getString(aborted ? R.string.toast_aborted : R.string.toast_send_failed));
@@ -196,7 +207,34 @@ public class InCallSendService extends Service {
         return false;
     }
 
-    private boolean sendRoot(Context ctx, String[] parts, long[] delays, boolean wait) throws Exception {
+    /**
+     * קו עם פרסומות: פותח את מסך האישור (דרך רוט, כדי שיעלה גם מהרקע באנדרואיד חדש) וממתין.
+     * true = אושר. false = בוטל / השיחה נותקה / נגמר הזמן.
+     */
+    private boolean awaitConfirm(Context ctx, RootShell sh) throws Exception {
+        AdConfirmActivity.State.begin();
+        try {
+            if (sh.run("am start -n " + ctx.getPackageName() + "/.AdConfirmActivity") == null) return false;
+            long end = System.currentTimeMillis() + CONFIRM_WAIT_MS;
+            while (AdConfirmActivity.State.get() == AdConfirmActivity.State.PENDING) {
+                if (!inCall(ctx)) { aborted = true; return false; }
+                if (System.currentTimeMillis() > end) { cancelled = true; return false; }
+                Thread.sleep(200);
+            }
+            if (AdConfirmActivity.State.get() == AdConfirmActivity.State.OK) {
+                Thread.sleep(SWITCH_DELAY_MS); // המסך נסגר; ensureCallUi שאחריו מחזיר את מסך השיחה אם צריך
+                return true;
+            }
+            cancelled = true;
+            return false;
+        } finally {
+            // אם עדיין ממתין (יציאה בגלל ניתוק/זמן) - מסמנים כדי שהמסך ייסגר מעצמו
+            AdConfirmActivity.State.answer(AdConfirmActivity.State.ABORT);
+        }
+    }
+
+    private boolean sendRoot(Context ctx, String[] parts, long[] delays, boolean wait,
+                             int confirmAfter) throws Exception {
         RootShell sh = RootShell.open();
         if (sh == null) return false;
         InjectorClient inj = null;
@@ -211,6 +249,7 @@ public class InCallSendService extends Service {
             // בלי תהליך קבוע: Android 7+ מקבל כמה קודים בפקודה אחת; לפני כן משרשרים ב-';'
             boolean multiArg = android.os.Build.VERSION.SDK_INT >= 24;
             for (int k = 0; k < parts.length; k++) {
+                if (confirmAfter > 0 && k == confirmAfter && !awaitConfirm(ctx, sh)) return false;
                 if (delays[k] > 0 && !sleepInCall(ctx, delays[k])) { aborted = true; return false; }
                 java.util.List<Integer> list = new java.util.ArrayList<Integer>();
                 for (int i = 0; i < parts[k].length(); i++) {

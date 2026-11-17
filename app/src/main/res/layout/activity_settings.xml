@@ -50,6 +50,20 @@
                 android:textDirection="ltr"
                 android:textSize="18sp"
                 android:nextFocusUp="@+id/btn_save"
+                android:nextFocusDown="@+id/cb_ads" />
+
+            <CheckBox
+                android:id="@+id/cb_ads"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="?attr/bgCard"
+                android:minHeight="44dp"
+                android:padding="8dp"
+                android:text="@string/cb_ads"
+                android:textColor="?attr/colorTextPrimary"
+                android:textSize="13sp"
+                android:nextFocusUp="@id/edit_number"
                 android:nextFocusDown="@+id/btn_ext_settings" />
 
             <Button
@@ -61,7 +75,7 @@
                 android:text="@string/btn_ext_settings"
                 android:textColor="?attr/colorTextPrimary"
                 android:textSize="16sp"
-                android:nextFocusUp="@id/edit_number"
+                android:nextFocusUp="@id/cb_ads"
                 android:nextFocusDown="@+id/cb_root" />
 
             <CheckBox

@@ -40,11 +40,37 @@ public final class SeqUtil {
     public static final class Script {
         public final String[] parts;
         public final long[] delays;
-        Script(List<String> p, List<Long> d) {
+        /** מצב "קו עם פרסומות": כמה חלקים נשלחים לפני בקשת האישור (0 = בלי אישור). */
+        public final int confirmAfter;
+        Script(List<String> p, List<Long> d) { this(p, d, 0); }
+        Script(List<String> p, List<Long> d, int confirmAfter) {
             parts = p.toArray(new String[0]);
             delays = new long[d.size()];
             for (int i = 0; i < delays.length; i++) delays[i] = d.get(i);
+            this.confirmAfter = confirmAfter;
         }
+    }
+
+    /**
+     * קו עם פרסומות: רק המקש הראשון של הרצף (השלוחה, אחרי ההמתנה שלפניו) נשלח מיד;
+     * כל השאר (כולל הטקסט) אחרי אישור המשתמש. null = אין מה לפצל (רצף בלי מקש, או אין המשך).
+     */
+    public static Script toAdsScript(String seq, String body) {
+        String s = sanitize(seq);
+        int k = -1;
+        for (int i = 0; i < s.length(); i++) if (s.charAt(i) != ',') { k = i; break; }
+        if (k < 0) return null;
+        Script head = toScript(s.substring(0, k + 1), "");
+        Script rest = toScript(s.substring(k + 1), body);
+        if (rest.parts.length == 1 && rest.parts[0].length() == 0) return null;
+        List<String> parts = new ArrayList<String>();
+        List<Long> delays = new ArrayList<Long>();
+        for (int i = 0; i < head.parts.length; i++) { parts.add(head.parts[i]); delays.add(head.delays[i]); }
+        for (int i = 0; i < rest.parts.length; i++) {
+            parts.add(rest.parts[i]);
+            delays.add(i == 0 ? 0L : rest.delays[i]); // האישור מחליף את ההמתנה הראשונה
+        }
+        return new Script(parts, delays, head.parts.length);
     }
 
     /** מפרק רצף + גוף (הטקסט המקודד כולל הסיומת) לחלקים עם השהיות. */

@@ -33,6 +33,13 @@
     <string name="label_p2">המתנה בין השלוחה לתת-שלוחה 2 (פסיקים)</string>
     <string name="label_p3">המתנה לפני תחילת ההקלדה (פסיקים)</string>
     <string name="cb_root">יש רוט: שליחה בתוך שיחה קיימת באמצעות הקשות מערכת (אחרת: צלילים דרך הרמקול, ניסיוני)</string>
+    <string name="cb_ads">קו עם פרסומות (דורש רוט): תחויג השלוחה בלבד, ושאר ההקשות יישלחו רק אחרי אישור</string>
+    <string name="toast_ads_need_root">מצב קו עם פרסומות דורש רוט - נשלח כרגיל</string>
+    <string name="ad_confirm_title">לשלוח את ההקשות?</string>
+    <string name="ad_confirm_msg">הפרסומת הסתיימה? לחץ שלח והמסך יחזור לשיחה.</string>
+    <string name="ad_confirm_ok">שלח</string>
+    <string name="ad_confirm_cancel">ביטול (השיחה נשארת)</string>
+    <string name="toast_ad_cancelled">השליחה בוטלה, השיחה נשארה פתוחה</string>
     <string name="label_gap">מרווח בין הקשות (מילישניות, ברירת מחדל 250)</string>
     <string name="label_batch">מהירות: כמה מקשים בכל פקודה (גבוה = מהיר יותר; 1 = מקש-מקש. אם נשלח רק המקש הראשון בכל קבוצה – הורד ל-1)</string>
     <string name="btn_goto_call">לשיחה הפעילה</string>

@@ -11,7 +11,7 @@ import android.widget.Toast;
 public class SettingsActivity extends Activity {
 
     private EditText number, gap, cmd, batch, map;
-    private CheckBox root;
+    private CheckBox root, ads;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +32,8 @@ public class SettingsActivity extends Activity {
         batch.setText(String.valueOf(Prefs.getBatch(this)));
         cmd.setText(Prefs.getInCallCmd(this));
         root.setChecked(Prefs.useRoot(this));
+        ads = (CheckBox) findViewById(R.id.cb_ads);
+        ads.setChecked(Prefs.isAdsLine(this));
 
         // פוקוס התחלתי: שדה המספר (הדבר הראשון שצריך למלא)
         number.requestFocus();
@@ -72,6 +74,7 @@ public class SettingsActivity extends Activity {
                 root.isChecked(),
                 num(gap, Prefs.DEFAULT_GAP_MS),
                 cmd.getText().toString().trim());
+        Prefs.setAdsLine(this, ads.isChecked());
         Prefs.setLetterMap(this, map.getText().toString().trim());
         Prefs.setBatch(this, num(batch, Prefs.DEFAULT_BATCH));
         Toast.makeText(this, R.string.toast_saved, Toast.LENGTH_SHORT).show();

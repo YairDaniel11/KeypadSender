@@ -49,6 +49,13 @@
             android:name=".HistoryActivity"
             android:exported="false" />
 
+        <!-- משימה נפרדת: בסגירה חוזרים למסך השיחה ולא לאפליקציה -->
+        <activity
+            android:name=".AdConfirmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity="" />
+
         <service
             android:name=".InCallSendService"
             android:exported="false" />
