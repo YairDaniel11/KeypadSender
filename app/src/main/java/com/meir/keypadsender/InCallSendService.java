@@ -32,6 +32,7 @@ public class InCallSendService extends Service {
     private static final int CONFIRM_WAIT_MS = 600000; // המתנה מקסימלית לאישור (10 דקות)
     private static final int WAIT_CALL_MS = 40000;   // המתנה מקסימלית להתחלת השיחה
     private static final int WAIT_ANSWER_MS = 45000; // המתנה מקסימלית למענה
+    private static final int ANSWER_SETTLE_MS = 1500; // מינימום המתנה אחרי המענה לפני המקש הראשון
     private static final int SWITCH_DELAY_MS = 1200; // המתנה אחרי חזרה למסך השיחה
     private static final int TONE_MS = 120;
 
@@ -241,7 +242,13 @@ public class InCallSendService extends Service {
         try {
             if (!inCall(ctx)) { aborted = true; return false; }
             if (!ensureCallUi(ctx, sh)) return false;
-            if (wait && !waitAnswered(ctx, sh)) return false;
+            if (wait) {
+                if (!waitAnswered(ctx, sh)) return false;
+                // מיד אחרי המענה נתיב האודיו/ה-DTMF עוד לא מוכן, והמקש הראשון (השלוחה) אובד.
+                // אם אין השהיה מוגדרת לפני החלק הראשון - ממתינים רגע קצר.
+                long settle = ANSWER_SETTLE_MS - (delays.length > 0 ? delays[0] : 0);
+                if (settle > 0 && !sleepInCall(ctx, settle)) { aborted = true; return false; }
+            }
             int gap = Math.max(0, Prefs.getGapMs(ctx));
             int same = Prefs.getSameKeyGapMs(ctx);
             int batch = Math.max(1, Prefs.getBatch(ctx));

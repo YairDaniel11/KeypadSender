@@ -23,9 +23,24 @@ public final class CallTracker {
     private static final int S_RINGING = 1;
     private static final int S_OFFHOOK = 2;
 
+    private static final String K_OWN_TS = "ct_own_ts";
+    private static final long OWN_DIAL_MS = 20000;
+
+    /**
+     * האפליקציה עצמה מחייגת: היא יודעת בוודאות עם מי השיחה, בלי להסתמך על שידורי המערכת
+     * (שלא תמיד מגיעים, ולפעמים מגיעים עם מספר ששונה - קידומת, פורמט וכו').
+     */
+    public static void onAppDial(Context ctx, String number) {
+        String n = PhoneNumberUtil.normalize(number);
+        Prefs.raw(ctx).edit().putString(K_OUT, n).putString(K_ACTIVE, n).putInt(K_LAST, S_IDLE)
+                .putString(K_IN, "").putLong(K_OWN_TS, System.currentTimeMillis()).apply();
+    }
+
     public static void onOutgoing(Context ctx, String rawNumber) {
         String n = PhoneNumberUtil.normalize(rawNumber);
         SharedPreferences sp = Prefs.raw(ctx);
+        // שידור על חיוג שהאפליקציה עצמה ביצעה הרגע: משאירים את המספר שהיא רשמה
+        if (System.currentTimeMillis() - sp.getLong(K_OWN_TS, 0) < OWN_DIAL_MS) return;
         SharedPreferences.Editor e = sp.edit().putString(K_OUT, n);
         // חיוג בזמן שיחה פעילה: הצד הפעיל הוא כעת הצד החדש
         if (sp.getInt(K_LAST, S_IDLE) == S_OFFHOOK) e.putString(K_ACTIVE, n);

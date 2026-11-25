@@ -416,6 +416,7 @@ public class MainActivity extends Activity {
                 String dial = root
                         ? number.replaceAll("[\\s-]", "")
                         : Dialer.buildDialString(number, seq, body);
+                CallTracker.onAppDial(this, number);
                 if (!Dialer.dial(this, dial)) {
                     Toast.makeText(this, R.string.toast_airplane, Toast.LENGTH_LONG).show();
                 } else if (root) {

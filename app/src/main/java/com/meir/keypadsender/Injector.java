@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
  */
 public final class Injector {
     private static final int HOLD_MS = 90;     // DTMF: צליל קצר מדי לא מזוהה בקו
+    private static final int FIRST_HOLD_MS = 400; // אורך הלחיצה על המקש הראשון
     private static final int MIN_GAP_MS = 70; // הפסקה מינימלית בין צלילים
 
     public static void main(String[] args) {
@@ -36,6 +37,7 @@ public final class Injector {
             BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
             String line;
             int last = -1;
+            boolean firstKey = true; // המקש הראשון בשיחה: נתיב האודיו עוד "מתחמם" והצליל הקצר נחתך
             while ((line = r.readLine()) != null) {
                 String[] t = line.trim().split("\\s+");
                 if (t.length == 0 || t[0].length() == 0) continue;
@@ -51,7 +53,8 @@ public final class Injector {
                     long now = SystemClock.uptimeMillis();
                     ok &= send(im, inject, new KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, 0, -1, 0,
                             0, InputDevice.SOURCE_KEYBOARD));
-                    Thread.sleep(HOLD_MS);
+                    Thread.sleep(firstKey ? FIRST_HOLD_MS : HOLD_MS);
+                    firstKey = false;
                     long up = SystemClock.uptimeMillis();
                     ok &= send(im, inject, new KeyEvent(now, up, KeyEvent.ACTION_UP, code, 0, 0, -1, 0,
                             0, InputDevice.SOURCE_KEYBOARD));
